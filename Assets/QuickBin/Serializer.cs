@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 
-using UnityEngine;
-
 namespace QuickBin {
 	public sealed partial class Serializer {
 		readonly List<byte> bytes;

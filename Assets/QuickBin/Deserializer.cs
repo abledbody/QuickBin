@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using TextEncoding = System.Text.Encoding;
 
-using UnityEngine;
-
 namespace QuickBin {
 	public sealed partial class Deserializer {
 		readonly byte[] buffer;
