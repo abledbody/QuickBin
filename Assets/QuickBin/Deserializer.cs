@@ -95,6 +95,7 @@ namespace QuickBin {
 		public Deserializer Read(out bool produced)   => ReadGeneric(sizeof(bool), BitConverter.ToBoolean, out produced);
 		public Deserializer Read(out byte produced)   => ReadGeneric(sizeof(byte), (b,i) => b[i], out produced);
 		public Deserializer Read(out sbyte produced)  => ReadGeneric(sizeof(sbyte), (b,i) => (sbyte)b[i], out produced);
+		public Deserializer Read(out char produced)   => ReadGeneric(sizeof(char), BitConverter.ToChar, out produced);
 		public Deserializer Read(out short produced)  => ReadGeneric(sizeof(short), BitConverter.ToInt16, out produced);
 		public Deserializer Read(out ushort produced) => ReadGeneric(sizeof(ushort), BitConverter.ToUInt16, out produced);
 		public Deserializer Read(out int produced)    => ReadGeneric(sizeof(int), BitConverter.ToInt32, out produced);
@@ -106,6 +107,27 @@ namespace QuickBin {
 
 		public Deserializer Read(out string produced, int? length = null) => ReadGeneric(length, TextEncoding.UTF8.GetString, out produced);
 		public Deserializer Read(out byte[] produced, int? length = null) => ReadGeneric(length, Extract, out produced);
+
+		public Deserializer Read(out DateTime produced) {
+			Read(out long ticks);
+			produced = new DateTime(ticks);
+			return this;
+		}
+
+		public Deserializer Read(out TimeSpan produced) {
+			Read(out long ticks);
+			produced = new TimeSpan(ticks);
+			return this;
+		}
+
+		public Deserializer Read(out Version produced) {
+			Read(out int major);
+			Read(out int minor);
+			Read(out int build);
+			Read(out int revision);
+			produced = new Version(major, minor, build, revision);
+			return this;
+		}
 	}
 
 	public class ForbiddenIndexException : Exception {

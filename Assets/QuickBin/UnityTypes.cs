@@ -1,7 +1,7 @@
 using UnityEngine;
 
 namespace QuickBin {
-	public partial class Serializer {
+	public sealed partial class Serializer {
 		public Serializer Write(Vector2 value) =>
 			Write(value.x)
 				.Write(value.y);
@@ -73,7 +73,7 @@ namespace QuickBin {
 
 	
 
-	public partial class Deserializer {
+	public sealed partial class Deserializer {
 		public Deserializer Read(out Vector2 produced) {
 			Read(out float x);
 			Read(out float y);

@@ -70,11 +70,11 @@ Doing it as part of a partial in the same file is as close to boilerplate, junk,
 Keep in mind that it must be in the QuickBin namespace.
 */
 namespace QuickBin {
-	public partial class Serializer {
+	public sealed partial class Serializer {
 		public Serializer Write(ExampleClass value) => value.Serialize(this);
 	}
 
-	public partial class Deserializer {
+	public sealed partial class Deserializer {
 		public Deserializer Read(out ExampleClass produced) => ExampleClass.Deserialize(this, out produced);
 	}
 }

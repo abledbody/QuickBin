@@ -28,19 +28,29 @@ namespace QuickBin {
 			return this;
 		}
 
-		public Serializer Write(bool value)   => WriteGeneric(value, x => x ? (byte)1 : (byte)0);
-		public Serializer Write(byte value)   => WriteGeneric(value, x => x);
-		public Serializer Write(sbyte value)  => WriteGeneric(value, x => (byte)x);
-		public Serializer Write(short value)  => WriteGeneric(value, BitConverter.GetBytes);
-		public Serializer Write(ushort value) => WriteGeneric(value, BitConverter.GetBytes);
-		public Serializer Write(int value)    => WriteGeneric(value, BitConverter.GetBytes);
-		public Serializer Write(uint value)   => WriteGeneric(value, BitConverter.GetBytes);
-		public Serializer Write(long value)   => WriteGeneric(value, BitConverter.GetBytes);
-		public Serializer Write(ulong value)  => WriteGeneric(value, BitConverter.GetBytes);
-		public Serializer Write(float value)  => WriteGeneric(value, BitConverter.GetBytes);
-		public Serializer Write(double value) => WriteGeneric(value, BitConverter.GetBytes);
+		public Serializer Write(bool value)    => WriteGeneric(value, x => x ? (byte)1 : (byte)0);
+		public Serializer Write(byte value)    => WriteGeneric(value, x => x);
+		public Serializer Write(sbyte value)   => WriteGeneric(value, x => (byte)x);
+		public Serializer Write(char value)    => WriteGeneric(value, BitConverter.GetBytes);
+		public Serializer Write(short value)   => WriteGeneric(value, BitConverter.GetBytes);
+		public Serializer Write(ushort value)  => WriteGeneric(value, BitConverter.GetBytes);
+		public Serializer Write(int value)     => WriteGeneric(value, BitConverter.GetBytes);
+		public Serializer Write(uint value)    => WriteGeneric(value, BitConverter.GetBytes);
+		public Serializer Write(long value)    => WriteGeneric(value, BitConverter.GetBytes);
+		public Serializer Write(ulong value)   => WriteGeneric(value, BitConverter.GetBytes);
+		public Serializer Write(float value)   => WriteGeneric(value, BitConverter.GetBytes);
+		public Serializer Write(double value)  => WriteGeneric(value, BitConverter.GetBytes);
 		
 		public Serializer Write(string value) => WriteGeneric(value, System.Text.Encoding.UTF8.GetBytes);
 		public Serializer Write(byte[] value) => WriteGeneric(value, x => x);
+
+		public Serializer Write(DateTime value) => Write(value.Ticks);
+		public Serializer Write(TimeSpan value) => Write(value.Ticks);
+
+		public Serializer Write(Version value) =>
+			Write(value.Major)
+			.Write(value.Minor)
+			.Write(value.Build)
+			.Write(value.Revision);
 	}
 }
