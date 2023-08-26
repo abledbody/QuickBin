@@ -18,6 +18,15 @@ namespace QuickBin {
 		public static implicit operator byte[](Serializer serializer) => serializer.bytes.ToArray();
 		public static implicit operator List<byte>(Serializer serializer) => serializer.bytes;
 
+		/// <summary>
+		/// Clears the internal List so that the Serializer can be reused.
+		/// </summary>
+		/// <returns>This Serializer.</returns>
+		public Serializer Clear() {
+			bytes.Clear();
+			return this;
+		}
+
 		private Serializer WriteGeneric<T>(T value, Func<T, byte> f) {
 			bytes.Add(f(value));
 			return this;
