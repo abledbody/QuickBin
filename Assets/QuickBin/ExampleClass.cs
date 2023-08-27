@@ -62,12 +62,10 @@ namespace Example {
 
 	// Take note that these are partial classes. By doing this, you can put the extensions alongside
 	// the type that they handle without having to come up with a unique name for each extension class.
-	public static partial class SerializerExtensions {
+	public static partial class QuickBinExtensions {
 		public static Serializer Write(this Serializer buffer, ExampleClass value) =>
 			value.Serialize(buffer);
-	}
-
-	public static partial class DeserializerExtensions {
+		
 		public static Deserializer Read(this Deserializer buffer, out ExampleClass produced) =>
 			ExampleClass.Deserialize(buffer, out produced);
 	}
