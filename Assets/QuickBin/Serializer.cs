@@ -27,6 +27,12 @@ namespace QuickBin {
 			return this;
 		}
 		
+		/// <summary>
+		/// Executes an action for each value in the specified IEnumerable. This method is purely for the convenience of chaining.
+		/// </summary>
+		/// <param name="values">The IEnumerable of values to act on.</param>
+		/// <param name="action">The action to execute on each value.</param>
+		/// <returns>This serializer.</returns>
 		public Serializer ForEach<T>(IEnumerable<T> values, Action<T> action) {
 			foreach (var value in values)
 				action(value);

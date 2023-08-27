@@ -64,6 +64,26 @@ namespace QuickBin {
 			Array.Copy(buffer, index, result, 0, length);
 			return result;
 		}
+		
+		/// <summary>
+		/// Executes an action for each value, providing an enumerated integer. This method is purely for the convenience of chaining.
+		/// </summary>
+		/// <param name="count">How many times to execute the action.</param>
+		/// <returns>This Deserializer</returns>
+		public Deserializer ForEach(int count, Action<int> action) {
+			for (var i = ReadIndex; i < count; i++)
+				action(i);
+			return this;
+		}
+
+		/// <summary>
+		/// Puts obj into produced. No really, that's all it does.
+		/// </summary>
+		/// <returns>This Deserializer</returns>
+		public Deserializer Return<T>(T obj, out T produced) {
+			produced = obj;
+			return this;
+		}
 
 
 		// These ReadGeneric methods are the core of the Deserializer.
@@ -108,26 +128,20 @@ namespace QuickBin {
 		public Deserializer Read(out string produced, int? length = null) => ReadGeneric(length, TextEncoding.UTF8.GetString, out produced);
 		public Deserializer Read(out byte[] produced, int? length = null) => ReadGeneric(length, Extract, out produced);
 
-		public Deserializer Read(out DateTime produced) {
-			Read(out long ticks);
-			produced = new DateTime(ticks);
-			return this;
-		}
+		public Deserializer Read(out DateTime produced) =>
+			Read(out long ticks)
+			.Return(new(ticks), out produced);
 
-		public Deserializer Read(out TimeSpan produced) {
-			Read(out long ticks);
-			produced = new TimeSpan(ticks);
-			return this;
-		}
+		public Deserializer Read(out TimeSpan produced) =>
+			Read(out long ticks)
+			.Return(new(ticks), out produced);
 
-		public Deserializer Read(out Version produced) {
-			Read(out int major);
-			Read(out int minor);
-			Read(out int build);
-			Read(out int revision);
-			produced = new Version(major, minor, build, revision);
-			return this;
-		}
+		public Deserializer Read(out Version produced) =>
+			Read(out int major)
+			.Read(out int minor)
+			.Read(out int build)
+			.Read(out int revision)
+			.Return(new(major, minor, build, revision), out produced);
 	}
 
 	public class ForbiddenIndexException : Exception {
