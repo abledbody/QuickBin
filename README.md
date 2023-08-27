@@ -21,7 +21,7 @@ The deserializer holds three pieces of information: A reference to a `byte[] buf
 
 Each overload for `Deserializer.Read` provides an `out` argument. Using initialization syntax or providing an existing typed field is how the deserializer selects the correct overload method for converting bytes into a type.
 ```cs
-Deserializer buffer = new(bytes)
+new Deserializer(bytes)
   .Read(out int firstNumber)
   .Read(out float secondNumber)
   .Read(out int helloWorldLength)
