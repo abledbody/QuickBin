@@ -60,7 +60,7 @@ namespace Example {
 		}
 	}
 
-	// Take note that these are partial classes. By doing this, you can put the extensions alongside
+	// Take note that this is a partial class. By doing this, you can put the extensions alongside
 	// the type that they handle without having to come up with a unique name for each extension class.
 	public static partial class QuickBinExtensions {
 		public static Serializer Write(this Serializer buffer, ExampleClass value) =>
