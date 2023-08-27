@@ -32,7 +32,7 @@ public class ExampleClass {
 			.Write(id)
 			.Write(velocity);
 	
-	public static Deserializer Deserialize(Deserializer buffer, out ExampleClass produced) {
+	public static Deserializer Deserialize(Deserializer buffer, out ExampleClass produced) =>
 		// Thanks to the "out" keyword, you can inline the declaration of variables,
 		// and immediately use them in the next method call.
 		
@@ -41,10 +41,10 @@ public class ExampleClass {
 		buffer.Read(out int nameLength)
 			.Read(out string name, nameLength)
 			.Read(out short id)
-			.Read(out Vector2 velocity);
-		produced = new(name, id, velocity);
-		return buffer;
-	}
+			.Read(out Vector2 velocity)
+			// The Return method is a convenience method that allows for expression bodies like this.
+			// All it does is spit back out what you put in.
+			.Return(new(name, id, velocity), out produced);
 
 	// Note that this is not necessarily a smart way to do a Clone,
 	// but it's a good example of how to use QuickBin at the top level.
