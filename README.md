@@ -8,7 +8,7 @@ The serializer is a wrapper for a `List<byte>`. Each time you call `Serializer.W
 ```cs
 var helloWorld = "Hello, QuickBin!";
 
-Serializer buffer = new()
+var buffer = new Serializer()
   .Write(10)
   .Write(18.5f)
   .Write(helloWorld.Length)
