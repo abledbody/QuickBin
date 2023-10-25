@@ -5,14 +5,17 @@ namespace QuickBin {
 	public sealed partial class Serializer {
 		readonly List<byte> bytes;
 		
+		/// <summary>
+		/// The number of bytes in the Serializer.
+		/// </summary>
 		public int Length => bytes.Count;
 
 		/// <summary>
-		/// Generates a Serializer, generating an empty list with a capacity of 0.
+		/// Generates a Serializer, initializing an empty list with a capacity of 0.
 		/// </summary>
 		public Serializer() => bytes = new List<byte>();
 		/// <summary>
-		/// Generates a Serializer, generating an empty list with the specified capacity.
+		/// Generates a Serializer, initializing an empty list with the specified capacity.
 		/// </summary>
 		/// <param name="capacity">The capacity of the list. See documentation for System.Collections.Generic.List<T>(int capacity) for details.</param>
 		public Serializer(int capacity) => bytes = new List<byte>(capacity);
