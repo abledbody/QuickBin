@@ -4,6 +4,8 @@ using System.Collections.Generic;
 namespace QuickBin {
 	public sealed partial class Serializer {
 		readonly List<byte> bytes;
+		
+		public int Length => bytes.Count;
 
 		/// <summary>
 		/// Generates a Serializer, generating an empty list with a capacity of 0.
@@ -17,6 +19,16 @@ namespace QuickBin {
 
 		public static implicit operator byte[](Serializer serializer) => serializer.bytes.ToArray();
 		public static implicit operator List<byte>(Serializer serializer) => serializer.bytes;
+		
+		/// <summary>
+		/// Executes an action. This method is purely for the convenience of chaining.
+		/// </summary>
+		/// <param name="action"></param>
+		/// <returns></returns>
+		public Serializer Then(Action action) {
+			action();
+			return this;
+		}
 
 		/// <summary>
 		/// Clears the internal List so that the Serializer can be reused.

@@ -1,0 +1,16 @@
+root = true
+
+[*.cs]
+dotnet_diagnostic.IDE1006.severity = none
+dotnet_diagnostic.UNT0023.severity = none
+dotnet_diagnostic.CA1852.severity = suggestion
+indent_style = tab
+trim_trailing_whitespace = true
+insert_final_newline = false
+csharp_new_line_before_open_brace = false
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+csharp_indent_preprocessor_if = outdent
+csharp_indent_preprocessor_region = outdent
+csharp_indent_preprocessor_other = outdent

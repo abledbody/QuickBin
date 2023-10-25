@@ -48,21 +48,15 @@ namespace QuickBin {
 
 		public static implicit operator byte[](Deserializer deserializer) => deserializer.buffer;
 		public static implicit operator List<byte>(Deserializer deserializer) => new(deserializer.buffer);
-
-		/// <summary>
-		/// Clones the remaining bytes in the buffer.
-		/// </summary>
-		/// <returns>A new byte array containing the remaining bytes in the buffer.</returns>
-		public byte[] CloneOutArray() {
-			var result = new byte[Remaining];
-			Array.Copy(buffer, ReadIndex, result, 0, Remaining);
-			return result;
-		}
 		
-		private static byte[] Extract(byte[] buffer, int index, int length) {
-			var result = new byte[length];
-			Array.Copy(buffer, index, result, 0, length);
-			return result;
+		/// <summary>
+		/// Executes an action. This method is purely for the convenience of chaining.
+		/// </summary>
+		/// <param name="action"></param>
+		/// <returns></returns>
+		public Deserializer Then(Action action) {
+			action();
+			return this;
 		}
 		
 		/// <summary>
@@ -85,6 +79,22 @@ namespace QuickBin {
 			return this;
 		}
 
+		/// <summary>
+		/// Clones the remaining bytes in the buffer.
+		/// </summary>
+		/// <returns>A new byte array containing the remaining bytes in the buffer.</returns>
+		public byte[] CloneOutArray() {
+			var result = new byte[Remaining];
+			Array.Copy(buffer, ReadIndex, result, 0, Remaining);
+			return result;
+		}
+		
+		
+		private static byte[] Extract(byte[] buffer, int index, int length) {
+			var result = new byte[length];
+			Array.Copy(buffer, index, result, 0, length);
+			return result;
+		}
 
 		// These ReadGeneric methods are the core of the Deserializer.
 		// They make it possible to make every primitive Read method a single line.
