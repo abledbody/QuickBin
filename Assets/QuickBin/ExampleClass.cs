@@ -1,7 +1,6 @@
 using UnityEngine;
-using QuickBin;
 
-namespace Example {
+namespace QuickBin.Example {
 	public class ExampleClass {
 		// All of these types are easily serialized in QuickBin.
 		public string name;
@@ -53,7 +52,7 @@ namespace Example {
 			var serializer = new Serializer().Write(this);
 
 			// Serializer can be implicitly cast to a byte array so you don't have to think about it.
-			// It's also what the constructor for Deserializer takes, so this becomes a dead simple operation.
+			// A byte array is also what the constructor for Deserializer takes, so this becomes a dead simple operation.
 			new Deserializer(serializer).Read(out ExampleClass produced);
 
 			return produced;
