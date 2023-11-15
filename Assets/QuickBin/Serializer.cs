@@ -97,7 +97,6 @@ namespace QuickBin {
 			
 			boolPlace++;
 			boolPlace %= 8;
-
 			return this;
 		}
 
