@@ -89,6 +89,9 @@ namespace QuickBin {
 		/// <summary>
 		/// Writes booleans into the same byte if possible.
 		/// </summary>
+		/// <param name="value">The boolean to write.</param>
+		/// <param name="forceNewByte">Whether to force writing a new byte, even if there's still space for flags in the current byte.</param>
+		/// <returns>This Serializer.</returns>
 		public Serializer WriteFlag(bool value, bool forceNewByte = false) {
 			if (forceNewByte)
 				boolPlace = 0;

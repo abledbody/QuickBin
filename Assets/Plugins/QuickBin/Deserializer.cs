@@ -145,6 +145,9 @@ namespace QuickBin {
 		/// <summary>
 		/// Reads booleans from the same byte if possible.
 		/// </summary>
+		/// <param name="produced">The boolean that was read.</param>
+		/// <param name="forceNewByte">Whether force reading from the next byte, even if there's still space for flags in the current byte.</param>
+		/// <returns>This Deserializer.</returns>
 		public Deserializer ReadFlag(out bool produced, bool forceNewByte = false) {
 			if (forceNewByte)
 				boolPlace = 0;
