@@ -4,6 +4,7 @@ using System.Collections.Generic;
 namespace QuickBin {
 	public sealed partial class Serializer {
 		readonly List<byte> bytes;
+		int boolPlace = 0;
 		
 		/// <summary>
 		/// The number of bytes in the Serializer.
@@ -56,11 +57,13 @@ namespace QuickBin {
 
 		private Serializer WriteGeneric<T>(T value, Func<T, byte> f) {
 			bytes.Add(f(value));
+			boolPlace = 0;
 			return this;
 		}
 
 		private Serializer WriteGeneric<T>(T value, Func<T, byte[]> f) {
 			bytes.AddRange(f(value));
+			boolPlace = 0;
 			return this;
 		}
 
@@ -82,6 +85,21 @@ namespace QuickBin {
 
 		public Serializer Write(DateTime value) => Write(value.Ticks);
 		public Serializer Write(TimeSpan value) => Write(value.Ticks);
+
+		/// <summary>
+		/// Writes booleans into the same byte if possible.
+		/// </summary>
+		public Serializer WriteFlag(bool value) {
+			if (boolPlace == 0)
+				Write(value);
+			else
+				bytes[^1] |= (byte)(value ? 1 << boolPlace : 0);
+			
+			boolPlace++;
+			boolPlace %= 8;
+
+			return this;
+		}
 
 		public Serializer Write(Version value) =>
 			Write(value.Major)

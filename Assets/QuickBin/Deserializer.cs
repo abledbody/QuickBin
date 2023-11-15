@@ -5,6 +5,8 @@ using TextEncoding = System.Text.Encoding;
 namespace QuickBin {
 	public sealed partial class Deserializer {
 		readonly byte[] buffer;
+		int boolPlace = 0;
+		byte flagByte = 0;
 		
 		/// <summary>
 		/// The next index in the buffer that will be read from.
@@ -106,6 +108,7 @@ namespace QuickBin {
 
 			produced = f(buffer, ReadIndex);
 			ReadIndex = nextIndex;
+			boolPlace = 0;
 			return this;
 		}
 
@@ -119,6 +122,7 @@ namespace QuickBin {
 			
 			produced = f(buffer, ReadIndex, byteLength.Value);
 			ReadIndex = nextIndex;
+			boolPlace = 0;
 			return this;
 		}
 
@@ -137,6 +141,20 @@ namespace QuickBin {
 
 		public Deserializer Read(out string produced, int? length = null) => ReadGeneric(length, TextEncoding.UTF8.GetString, out produced);
 		public Deserializer Read(out byte[] produced, int? length = null) => ReadGeneric(length, Extract, out produced);
+
+		/// <summary>
+		/// Reads booleans from the same byte if possible.
+		/// </summary>
+		public Deserializer ReadFlag(out bool produced) {
+			if (boolPlace == 0)
+				Read(out flagByte);
+			
+			produced = (flagByte & (1 << boolPlace)) != 0;
+			
+			boolPlace++;
+			boolPlace %= 8;
+			return this;
+		}
 
 		public Deserializer Read(out DateTime produced) =>
 			Read(out long ticks)
