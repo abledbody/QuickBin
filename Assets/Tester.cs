@@ -19,7 +19,7 @@ public static class Tester {
             .WriteFlag(false)
             .WriteFlag(true)
             .WriteFlag(true)
-            .WriteFlag(false)
+            .WriteFlag(false, true)
             .WriteFlag(true)
             .Write(10)
             .WriteFlag(true)
@@ -29,7 +29,8 @@ public static class Tester {
             .WriteFlag(true);
         
         Assert.AreEqual(((byte[])buffer)[0], (byte)0b0001_0110);
-        Assert.AreEqual(((byte[])buffer)[1], (byte)0b0000_1011);
+        Assert.AreEqual(((byte[])buffer)[1], (byte)0b0000_0011);
+        Assert.AreEqual(((byte[])buffer)[2], (byte)0b0000_0010);
         
         new Deserializer(buffer)
             .ReadFlag(out bool a)
@@ -42,7 +43,7 @@ public static class Tester {
             .ReadFlag(out bool h)
             .ReadFlag(out bool i)
             .ReadFlag(out bool j)
-            .ReadFlag(out bool k)
+            .ReadFlag(out bool k, true)
             .ReadFlag(out bool l)
             .Read(out int m)
             .ReadFlag(out bool n)

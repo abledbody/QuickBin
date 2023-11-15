@@ -145,7 +145,10 @@ namespace QuickBin {
 		/// <summary>
 		/// Reads booleans from the same byte if possible.
 		/// </summary>
-		public Deserializer ReadFlag(out bool produced) {
+		public Deserializer ReadFlag(out bool produced, bool forceNewByte = false) {
+			if (forceNewByte)
+				boolPlace = 0;
+			
 			if (boolPlace == 0)
 				Read(out flagByte);
 			

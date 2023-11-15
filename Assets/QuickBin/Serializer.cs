@@ -89,7 +89,10 @@ namespace QuickBin {
 		/// <summary>
 		/// Writes booleans into the same byte if possible.
 		/// </summary>
-		public Serializer WriteFlag(bool value) {
+		public Serializer WriteFlag(bool value, bool forceNewByte = false) {
+			if (forceNewByte)
+				boolPlace = 0;
+			
 			if (boolPlace == 0)
 				Write(value);
 			else
