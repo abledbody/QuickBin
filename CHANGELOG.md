@@ -1,5 +1,6 @@
 ## v1.5.2
 - Restructured the project as a Unity package
+- Updated the license agreement
 
 ## v1.5.1
 - Added an option to force a new byte when writing/reading flags
