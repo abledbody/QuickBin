@@ -3,6 +3,9 @@ QuickBin is intended to make binary serialization and deserialization nearly tho
 
 Serialization and deserialization are made to be mirror images of each other, so it's easy to see what you're doing, and make sure you serialize and deserialize your data the exact same way. The heavy focus on method chaining makes it easy to read, and quick to implement.
 
+## Unity Installation
+To install QuickBin, go to the package manager, press the plus button in the top left, select `Add package by git URL...` and enter `https://github.com/abledbody/QuickBin.git`
+
 ## The Serializer class
 The serializer is a wrapper for a `List<byte>`. Each time you call `Serializer.Write` it picks the appropriate overload method for the provided type, and adds the bytes to the list. Once you're ready to use the produced bytes, like to write them to a file, you can simply put the reference to the serializer into an argument or field of type `byte[]`, and it will implicitly convert itself.
 ```cs
