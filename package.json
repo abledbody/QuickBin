@@ -1,0 +1,44 @@
+{
+  "name": "com.abledbody.quickbin",
+  "version": "1.5.2",
+  "description": "QuickBin is intended to make binary serialization and deserialization nearly thoughtless.\n\nSerialization and deserialization are made to be mirror images of each other, so it's easy to see what you're doing, and make sure you serialize and deserialize your data the exact same way. The heavy focus on method chaining makes it easy to read, and quick to implement.",
+  "displayName": "QuickBin",
+  "author": {
+    "name": "abledbody",
+    "email": "abledbody.gamedev@gmail.com",
+    "url": "https://github.com/abledbody"
+  },
+  "documentationUrl": "https://github.com/abledbody/QuickBin/blob/main/README.md",
+  "licensesUrl": "https://github.com/abledbody/QuickBin/blob/main/license.md",
+  "samples": [
+    {
+      "displayName": "Example script",
+      "description": "A short, heavily commented script which demonstrates how QuickBin is commonly used.",
+      "path": "Samples~/ExampleClass.cs"
+    }
+  ],
+  "keywords": [
+    "binary",
+    "serialization",
+    "deserialization",
+    "serialize",
+    "deserialize",
+    "quick",
+    "bin",
+    "quickbin",
+    "abledbody",
+    "IO",
+    "data",
+    "save",
+    "load",
+    "read",
+    "write",
+    "file",
+    "network",
+    "networking",
+    "multiplayer",
+    "functional",
+    "chaining",
+    "lightweight"
+  ]
+}

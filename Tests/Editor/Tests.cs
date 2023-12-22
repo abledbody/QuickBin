@@ -1,11 +1,9 @@
-using UnityEngine;
-using UnityEngine.Assertions;
-using UnityEditor;
+using NUnit.Framework;
 using QuickBin;
 
-public static class Tester {
-    [MenuItem("QuickBin/Test")]
-    public static void Test() {
+public class Tests {
+    [Test]
+    public static void FlagBools() {
         var testString = "Hello, world!";
 
         var buffer = new Serializer()
@@ -27,11 +25,11 @@ public static class Tester {
             .Write(testString)
             .WriteFlag(false)
             .WriteFlag(true);
-        
+
         Assert.AreEqual(((byte[])buffer)[0], (byte)0b0001_0110);
         Assert.AreEqual(((byte[])buffer)[1], (byte)0b0000_0011);
         Assert.AreEqual(((byte[])buffer)[2], (byte)0b0000_0010);
-        
+
         new Deserializer(buffer)
             .ReadFlag(out bool a)
             .ReadFlag(out bool b)
@@ -69,7 +67,5 @@ public static class Tester {
         Assert.AreEqual(testString, o);
         Assert.IsFalse(p);
         Assert.IsTrue(q);
-
-        Debug.Log("QuickBin tests passed.");
     }
 }
