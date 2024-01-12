@@ -13,7 +13,7 @@ Attribution to the original developer is not required. However, you are strictly
 
 ## Licensing Restrictions
 
-This code can be integrated into any project, regardless of its license. However, the parts derived from this code must retain this license. This code must not be re-licensed under a different license when redistributed, either in its original form or as part of another project.
+This code can be integrated into any project, regardless of its license. However, any source code derived from this code must retain this license. This code must not be re-licensed under a different license when redistributed, either in its original form or as part of another project.
 
 ## Disclaimer of Warranty
 
