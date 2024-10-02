@@ -1,6 +1,8 @@
 using NUnit.Framework;
 using QuickBin;
 
+using TextEncoding = System.Text.Encoding;
+
 public class Tests {
     [Test]
     public static void FlagBools() {
@@ -21,8 +23,7 @@ public class Tests {
             .WriteFlag(true)
             .Write(10)
             .WriteFlag(true)
-            .Write(testString.Length)
-            .Write(testString)
+            .Write(testString, Serializer.Len_i32)
             .WriteFlag(false)
             .WriteFlag(true);
 
@@ -68,4 +69,57 @@ public class Tests {
         Assert.IsFalse(p);
         Assert.IsTrue(q);
     }
+	
+	[Test]
+	public static void StringEncoding() {
+		var testString = "Hello, World!";
+		
+		var buffer = new Serializer()
+			.Write(testString, Serializer.Len_i64)
+			.Write(testString, Serializer.Len_i32)
+			.Write(testString, Serializer.Len_i16)
+			.Write(testString, Serializer.Len_i8)
+			.Write(testString, Serializer.Len_u64)
+			.Write(testString, Serializer.Len_u32)
+			.Write(testString, Serializer.Len_u16)
+			.Write(testString, Serializer.Len_u8)
+			.Write(testString, TextEncoding.ASCII, Serializer.Len_i32)
+			.Write(testString, TextEncoding.BigEndianUnicode, Serializer.Len_i32)
+			.Write(testString, TextEncoding.Unicode, Serializer.Len_i32)
+			.Write(testString, TextEncoding.UTF32, Serializer.Len_i32)
+			.Write(testString, TextEncoding.UTF7, Serializer.Len_i32)
+			.Write(testString, TextEncoding.UTF8, Serializer.Len_i32);
+		
+		new Deserializer(buffer)
+			.Read(out string str_long, Deserializer.Len_i64)
+			.Read(out string str_int, Deserializer.Len_i32)
+			.Read(out string str_short, Deserializer.Len_i16)
+			.Read(out string str_sbyte, Deserializer.Len_i8)
+			.Read(out string str_ulong, Deserializer.Len_u64)
+			.Read(out string str_uint, Deserializer.Len_u32)
+			.Read(out string str_ushort, Deserializer.Len_u16)
+			.Read(out string str_byte, Deserializer.Len_u8)
+			.Read(out string ascii, TextEncoding.ASCII, Deserializer.Len_i32)
+			.Read(out string bigEndianUnicode, TextEncoding.BigEndianUnicode, Deserializer.Len_i32)
+			.Read(out string unicode, TextEncoding.Unicode, Deserializer.Len_i32)
+			.Read(out string utf32, TextEncoding.UTF32, Deserializer.Len_i32)
+			.Read(out string utf7, TextEncoding.UTF7, Deserializer.Len_i32)
+			.Read(out string utf8, TextEncoding.UTF8, Deserializer.Len_i32);
+		
+		Assert.AreEqual(testString, str_long);
+		Assert.AreEqual(testString, str_int);
+		Assert.AreEqual(testString, str_short);
+		Assert.AreEqual(testString, str_sbyte);
+		Assert.AreEqual(testString, str_ulong);
+		Assert.AreEqual(testString, str_uint);
+		Assert.AreEqual(testString, str_ushort);
+		Assert.AreEqual(testString, str_byte);
+		
+		Assert.AreEqual(testString, ascii);
+		Assert.AreEqual(testString, bigEndianUnicode);
+		Assert.AreEqual(testString, unicode);
+		Assert.AreEqual(testString, utf32);
+		Assert.AreEqual(testString, utf7);
+		Assert.AreEqual(testString, utf8);
+	}
 }

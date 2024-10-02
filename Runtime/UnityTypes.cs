@@ -1,4 +1,5 @@
 using UnityEngine;
+using QuickBin.ChainExtensions;
 
 namespace QuickBin {
 	public sealed partial class Serializer {
@@ -77,82 +78,82 @@ namespace QuickBin {
 		public Deserializer Read(out Vector2 produced) =>
 			Read(out float x)
 			.Read(out float y)
-			.Return(new(x, y), out produced);
+			.Assign(new(x, y), out produced);
 
 		public Deserializer Read(out Vector3 produced) =>
 			Read(out float x)
 			.Read(out float y)
 			.Read(out float z)
-			.Return(new(x,y,z), out produced);
+			.Assign(new(x,y,z), out produced);
 
 		public Deserializer Read(out Vector4 produced) =>
 			Read(out float x)
 			.Read(out float y)
 			.Read(out float z)
 			.Read(out float w)
-			.Return(new(x, y, z, w), out produced);
+			.Assign(new(x, y, z, w), out produced);
 
 		public Deserializer Read(out Vector2Int produced) =>
 			Read(out int x)
 			.Read(out int y)
-			.Return(new(x, y), out produced);
+			.Assign(new(x, y), out produced);
 
 		public Deserializer Read(out Vector3Int produced) =>
 			Read(out int x)
 			.Read(out int y)
 			.Read(out int z)
-			.Return(new(x, y), out produced);
+			.Assign(new(x, y), out produced);
 
 		public Deserializer Read(out Quaternion produced) =>
 			Read(out float x)
 			.Read(out float y)
 			.Read(out float z)
 			.Read(out float w)
-			.Return(new(x, y, z, w), out produced);
+			.Assign(new(x, y, z, w), out produced);
 
 		public Deserializer Read(out Color produced) =>
 			Read(out float r)
 			.Read(out float g)
 			.Read(out float b)
 			.Read(out float a)
-			.Return(new(r, g, b, a), out produced);
+			.Assign(new(r, g, b, a), out produced);
 
 		public Deserializer Read(out Color32 produced) =>
 			Read(out byte r)
 			.Read(out byte g)
 			.Read(out byte b)
 			.Read(out byte a)
-			.Return(new(r, g, b, a), out produced);
+			.Assign(new(r, g, b, a), out produced);
 
 		public Deserializer Read(out Matrix4x4 produced) =>
 			Read(out Vector4 c1)
 			.Read(out Vector4 c2)
 			.Read(out Vector4 c3)
 			.Read(out Vector4 c4)
-			.Return(new(c1, c2, c3, c4), out produced);
+			.Assign(new(c1, c2, c3, c4), out produced);
 
 		public Deserializer Read(out Rect produced) =>
 			Read(out float x)
 			.Read(out float y)
 			.Read(out float width)
 			.Read(out float height)
-			.Return(new(x, y, width, height), out produced);
+			.Assign(new(x, y, width, height), out produced);
 
 		public Deserializer Read(out RectInt produced) =>
 			Read(out int x)
 			.Read(out int y)
 			.Read(out int width)
 			.Read(out int height)
-			.Return(new(x, y, width, height), out produced);
+			.Assign(new(x, y, width, height), out produced);
 
 		public Deserializer Read(out Bounds produced) =>
 			Read(out Vector3 center)
 			.Read(out Vector3 size)
-			.Return(new(center, size), out produced);
+			.Assign(new(center, size), out produced);
 
 		public Deserializer Read(out BoundsInt produced) =>
 			Read(out Vector3Int center)
 			.Read(out Vector3Int size)
-			.Return(new(center, size), out produced);
+			.Assign(new(center, size), out produced);
 	}
 }

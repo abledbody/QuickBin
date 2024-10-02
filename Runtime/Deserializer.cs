@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using TextEncoding = System.Text.Encoding;
+using QuickBin.ChainExtensions;
 
 namespace QuickBin {
+	
 	public sealed partial class Deserializer {
 		readonly byte[] buffer;
 		int boolPlace = 0;
@@ -52,16 +54,6 @@ namespace QuickBin {
 		public static implicit operator List<byte>(Deserializer deserializer) => new(deserializer.buffer);
 		
 		/// <summary>
-		/// Executes an action. This method is purely for the convenience of chaining.
-		/// </summary>
-		/// <param name="action"></param>
-		/// <returns></returns>
-		public Deserializer Then(Action action) {
-			action();
-			return this;
-		}
-		
-		/// <summary>
 		/// Executes an action for each value, providing an enumerated integer. This method is purely for the convenience of chaining.
 		/// </summary>
 		/// <param name="count">How many times to execute the action.</param>
@@ -69,15 +61,6 @@ namespace QuickBin {
 		public Deserializer ForEach(int count, Action<int> action) {
 			for (var i = ReadIndex; i < count; i++)
 				action(i);
-			return this;
-		}
-
-		/// <summary>
-		/// Puts obj into produced. No really, that's all it does.
-		/// </summary>
-		/// <returns>This Deserializer</returns>
-		public Deserializer Return<T>(T obj, out T produced) {
-			produced = obj;
 			return this;
 		}
 
@@ -92,11 +75,7 @@ namespace QuickBin {
 		}
 		
 		
-		private static byte[] Extract(byte[] buffer, int index, int length) {
-			var result = new byte[length];
-			Array.Copy(buffer, index, result, 0, length);
-			return result;
-		}
+		private static byte[] Extract(byte[] buffer, int index, int length) => buffer[index..(index + length)];
 
 		// These ReadGeneric methods are the core of the Deserializer.
 		// They make it possible to make every primitive Read method a single line.
@@ -138,9 +117,30 @@ namespace QuickBin {
 		public Deserializer Read(out ulong produced)  => ReadGeneric(sizeof(ulong), BitConverter.ToUInt64, out produced);
 		public Deserializer Read(out float produced)  => ReadGeneric(sizeof(float), BitConverter.ToSingle, out produced);
 		public Deserializer Read(out double produced) => ReadGeneric(sizeof(double), BitConverter.ToDouble, out produced);
-
-		public Deserializer Read(out string produced, int? length = null) => ReadGeneric(length, TextEncoding.UTF8.GetString, out produced);
-		public Deserializer Read(out byte[] produced, int? length = null) => ReadGeneric(length, Extract, out produced);
+		
+		public Deserializer Read(out string produced, TextEncoding encoding, int? length = null) =>
+			ReadGeneric(length, encoding.GetString, out produced);
+		public Deserializer Read(out string produced, int? length = null) =>
+			Read(out produced, TextEncoding.UTF8, length);
+		public Deserializer Read(out byte[] produced, int? length = null) =>
+			ReadGeneric(length, Extract, out produced);
+		
+		public delegate int LengthReader(Deserializer buffer);
+		public Deserializer Read(out string produced, TextEncoding encoding, LengthReader readLen) =>
+			Read(out produced, encoding, readLen(this));
+		public Deserializer Read(out string produced, LengthReader readLen) =>
+			Read(out produced, TextEncoding.UTF8, readLen);
+		public Deserializer Read(out byte[] produced, LengthReader readLen) =>
+			Read(out produced, readLen(this));
+		
+		public static int Len_i64(Deserializer buffer) => buffer.Read(out long len).Output((int)len);
+		public static int Len_u64(Deserializer buffer) => buffer.Read(out ulong len).Output((int)len);
+		public static int Len_i32(Deserializer buffer) => buffer.Read(out int len).Output(len);
+		public static int Len_u32(Deserializer buffer) => buffer.Read(out uint len).Output((int)len);
+		public static int Len_i16(Deserializer buffer) => buffer.Read(out short len).Output(len);
+		public static int Len_u16(Deserializer buffer) => buffer.Read(out ushort len).Output(len);
+		public static int Len_i8(Deserializer buffer) => buffer.Read(out sbyte len).Output(len);
+		public static int Len_u8(Deserializer buffer) => buffer.Read(out byte len).Output(len);
 
 		/// <summary>
 		/// Reads booleans from the same byte if possible.
@@ -164,18 +164,18 @@ namespace QuickBin {
 
 		public Deserializer Read(out DateTime produced) =>
 			Read(out long ticks)
-			.Return(new(ticks), out produced);
+			.Assign(new(ticks), out produced);
 
 		public Deserializer Read(out TimeSpan produced) =>
 			Read(out long ticks)
-			.Return(new(ticks), out produced);
+			.Assign(new(ticks), out produced);
 
 		public Deserializer Read(out Version produced) =>
 			Read(out int major)
 			.Read(out int minor)
 			.Read(out int build)
 			.Read(out int revision)
-			.Return(new(major, minor, build, revision), out produced);
+			.Assign(new(major, minor, build, revision), out produced);
 	}
 
 	public class ForbiddenIndexException : Exception {

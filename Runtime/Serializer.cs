@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using TextEncoding = System.Text.Encoding;
 
 namespace QuickBin {
 	public sealed partial class Serializer {
@@ -80,8 +81,28 @@ namespace QuickBin {
 		public Serializer Write(float value)  => WriteGeneric(value, BitConverter.GetBytes);
 		public Serializer Write(double value) => WriteGeneric(value, BitConverter.GetBytes);
 		
-		public Serializer Write(string value) => WriteGeneric(value, System.Text.Encoding.UTF8.GetBytes);
+		/// <summary>A method that writes the length of a byte array to the Serializer.</summary>
+		/// <param name="buffer">The Serializer to write the length to.</param>
+		/// <param name="value">The byte array to write the length of.</param>
+		/// <returns>This Serializer.</returns>
+		public delegate Serializer LengthWriter(Serializer buffer, byte[] value);
+		public static Serializer Len_i64(Serializer buffer, byte[] value) => buffer.Write(value.LongLength);
+		public static Serializer Len_u64(Serializer buffer, byte[] value) => buffer.Write((ulong)value.LongLength);
+		public static Serializer Len_i32(Serializer buffer, byte[] value) => buffer.Write(value.Length);
+		public static Serializer Len_u32(Serializer buffer, byte[] value) => buffer.Write((uint)value.LongLength);
+		public static Serializer Len_i16(Serializer buffer, byte[] value) => buffer.Write((short)value.Length);
+		public static Serializer Len_u16(Serializer buffer, byte[] value) => buffer.Write((ushort)value.Length);
+		public static Serializer Len_i8(Serializer buffer, byte[] value) =>  buffer.Write((sbyte)value.Length);
+		public static Serializer Len_u8(Serializer buffer, byte[] value) =>  buffer.Write((byte)value.Length);
+		
 		public Serializer Write(byte[] value) => WriteGeneric(value, x => x);
+		public Serializer Write(byte[] value, LengthWriter writeLen) => writeLen(this, value).Write(value);
+		
+		public Serializer Write(string value, TextEncoding encoding) => Write(encoding.GetBytes(value));
+		public Serializer Write(string value, TextEncoding encoding, LengthWriter writeLen) => Write(encoding.GetBytes(value), writeLen);
+		public Serializer Write(string value) => Write(value, TextEncoding.UTF8);
+		public Serializer Write(string value, LengthWriter writeLen) => Write(value, TextEncoding.UTF8, writeLen);
+		
 
 		public Serializer Write(DateTime value) => Write(value.Ticks);
 		public Serializer Write(TimeSpan value) => Write(value.Ticks);

@@ -1,4 +1,5 @@
 using UnityEngine;
+using QuickBin.ChainExtensions;
 
 namespace QuickBin.Example {
 	public class ExampleClass {
@@ -42,9 +43,9 @@ namespace QuickBin.Example {
 				.Read(out string name, nameLength)
 				.Read(out short id)
 				.Read(out Vector2 velocity)
-				// The Return method is a convenience method that allows for expression bodies like this.
-				// All it does is spit back out what you put in.
-				.Return(new(name, id, velocity), out produced);
+				// The Assign method is a convenience method that allows for expression bodies like this.
+				// It is exactly equivalent to `produced = new(name, id, velocity);`.
+				.Assign(new(name, id, velocity), out produced);
 
 		// Note that this is not necessarily a smart way to do a Clone,
 		// but it's a good example of how to use QuickBin at the top level.
