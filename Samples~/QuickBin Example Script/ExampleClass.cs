@@ -50,7 +50,7 @@ namespace QuickBin.Example {
 				.Validate(
 					() => new(name, id, velocity),
 					out produced,
-					() => new(null, -1, Vector2.Zero)
+					() => new(null, -1, Vector2.zero)
 				);
 
 		// Note that this is not necessarily a smart way to do a Clone,
@@ -60,11 +60,11 @@ namespace QuickBin.Example {
 
 			// Serializer can be implicitly cast to a byte array so you don't have to think about it.
 			// A byte array is also what the constructor for Deserializer takes, so this becomes a dead simple operation.
-			new Deserializer(serializer).Read(out ExampleClass produced);
+			var deserializer = new Deserializer(serializer).Read(out ExampleClass produced);
 			
 			// At any point in the call stack you can check buffer.Overflowed to see
 			// if there was enough data to produce a valid object.
-			if (buffer.Overflowed)
+			if (deserializer.Overflowed)
 				throw new System.Exception("Oh no! Not enough data.");
 
 			return produced;

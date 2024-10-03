@@ -1,5 +1,4 @@
 using UnityEngine;
-using QuickBin.ChainExtensions;
 
 namespace QuickBin {
 	public sealed partial class Serializer {

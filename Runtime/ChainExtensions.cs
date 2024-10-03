@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace QuickBin.ChainExtensions {
@@ -42,7 +43,7 @@ namespace QuickBin.ChainExtensions {
 		/// <param name="action">The action to execute on each value.</param>
 		/// <returns>This serializer.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public TChain ForEach<TChain, T>(TChain @this, IEnumerable<T> values, Action<T> action) {
+		public static TChain ForEach<TChain, T>(this TChain @this, IEnumerable<T> values, Action<T> action) {
 			foreach (var value in values)
 				action(value);
 			return @this;
