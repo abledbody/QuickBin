@@ -50,12 +50,8 @@ namespace QuickBin {
 			return result;
 		}
 		
-		public Deserializer Validate<T>(Func<T> constructor, out T variable, Action onOverflow = null) {
-			if (Overflowed) {
-				onOverflow?.Invoke();
-				variable = default;
-			}
-			else variable = constructor();
+		public Deserializer Validate<T>(Func<T> constructor, out T variable, Func<T> onOverflow = null) {
+			variable = Overflowed ? (onOverflow == null ? default : onOverflow()) : constructor();
 			return this;
 		}
 		
@@ -147,17 +143,17 @@ namespace QuickBin {
 
 		public Deserializer Read(out DateTime produced) =>
 			Read(out long ticks)
-			.Assign(new(ticks), out produced);
+			.Validate(() => new(ticks), out produced);
 
 		public Deserializer Read(out TimeSpan produced) =>
 			Read(out long ticks)
-			.Assign(new(ticks), out produced);
+			.Validate(() => new(ticks), out produced);
 
 		public Deserializer Read(out Version produced) =>
 			Read(out int major)
 			.Read(out int minor)
 			.Read(out int build)
 			.Read(out int revision)
-			.Assign(new(major, minor, build, revision), out produced);
+			.Validate(() => new(major, minor, build, revision), out produced);
 	}
 }

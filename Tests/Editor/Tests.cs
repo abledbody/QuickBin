@@ -137,7 +137,7 @@ public class Tests {
 			.Validate(
 				() => (good_a, good_b),
 				out var goodProduced,
-				() => overflowed = true
+				() => {overflowed = true; return default;}
 			);
 		
 		Assert.AreEqual(10, good_a);
@@ -154,7 +154,7 @@ public class Tests {
 			.Validate(
 				() => (bad_a, bad_b, bad_c, bad_d),
 				out var badProduced,
-				() => overflowed = true
+				() => {overflowed = true; return default;}
 			);
 		
 		Assert.AreEqual(10, bad_a);
