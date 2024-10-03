@@ -122,4 +122,47 @@ public class Tests {
 		Assert.AreEqual(testString, utf7);
 		Assert.AreEqual(testString, utf8);
 	}
+	
+	[Test]
+	public static void Overflow() {
+		var overflowed = false;
+		
+		var buffer = new Serializer()
+			.Write(10)
+			.Write("Foo", Serializer.Len_i32);
+		
+		var reader = new Deserializer(buffer)
+			.Read(out int good_a)
+			.Read(out string good_b, Deserializer.Len_i32)
+			.Validate(
+				() => (good_a, good_b),
+				out var goodProduced,
+				() => overflowed = true
+			);
+		
+		Assert.AreEqual(10, good_a);
+		Assert.AreEqual("Foo", good_b);
+		Assert.AreEqual(goodProduced, (10, "Foo"));
+		Assert.IsFalse(overflowed);
+		Assert.IsFalse(reader.Overflowed);
+		
+		reader = new Deserializer(buffer)
+			.Read(out int bad_a)
+			.Read(out string bad_b, Deserializer.Len_i32)
+			.Read(out int bad_c)
+			.Read(out string bad_d, Deserializer.Len_i32)
+			.Validate(
+				() => (bad_a, bad_b, bad_c, bad_d),
+				out var badProduced,
+				() => overflowed = true
+			);
+		
+		Assert.AreEqual(10, bad_a);
+		Assert.AreEqual("Foo", bad_b);
+		Assert.AreEqual(default(int), bad_c);
+		Assert.AreEqual(default(string), bad_d);
+		Assert.AreEqual(badProduced, default((int, string, int, string)));
+		Assert.IsTrue(overflowed);
+		Assert.IsTrue(reader.Overflowed);
+	}
 }

@@ -10,37 +10,26 @@ namespace QuickBin {
 		int boolPlace = 0;
 		byte flagByte = 0;
 		
-		/// <summary>
-		/// The next index in the buffer that will be read from.
-		/// </summary>
+		/// <summary>The next index in the buffer that will be read from.</summary>
 		public int ReadIndex {get; private set;}
-		/// <summary>
-		/// The index of the first byte that is not readable by this Deserializer.
-		/// </summary>
+		/// <summary>The index of the first byte that is not readable by this Deserializer.</summary>
 		public int ForbiddenIndex {get;}
 		
-		/// <summary>
-		/// Whether or not the Deserializer has read all of the bytes that it is allowed to.
-		/// </summary>
+		/// <summary>Whether or not the Deserializer has read all of the bytes that it is allowed to.</summary>
 		public bool IsExhausted => ReadIndex >= ForbiddenIndex;
-		/// <summary>
-		/// The length of the buffer, including bytes that are not readable by this Deserializer.
-		/// </summary>
+		
+		/// <summary>The length of the buffer, including bytes that are not readable by this Deserializer.</summary>
 		public int InternalLength => buffer.Length;
-		/// <summary>
-		/// The number of remaining bytes that can be read by this Deserializer.
-		/// </summary>
+		/// <summary>The number of remaining bytes that can be read by this Deserializer.</summary>
 		public int Remaining => ForbiddenIndex - ReadIndex;
-		/// <summary>
-		/// Indexes the buffer offset by the ReadIndex.
-		/// </summary>
+		/// <summary>Whether the Deserializer has attempted to read more bytes than are in the buffer.</summary>
+		public bool Overflowed {get; private set;}
+		/// <summary>Indexes the buffer offset by the ReadIndex.</summary>
 		/// <param name="index">The index of the byte to get.</param>
 		/// <returns>The byte the specified number of indices after the ReadIndex.</returns>
 		public byte this[int index] => buffer[ReadIndex + index];
-
-		/// <summary>
-		/// Creates a Deserializer from a byte array.
-		/// </summary>
+		
+		/// <summary>Creates a Deserializer from a byte array.</summary>
 		/// <param name="buffer">The byte array to deserialize from.</param>
 		/// <param name="readIndex">The index to start reading from.</param>
 		/// <param name="forbiddenIndex">The index of the first byte that is not readable by this Deserializer.</param>
@@ -52,26 +41,22 @@ namespace QuickBin {
 
 		public static implicit operator byte[](Deserializer deserializer) => deserializer.buffer;
 		public static implicit operator List<byte>(Deserializer deserializer) => new(deserializer.buffer);
-		
-		/// <summary>
-		/// Executes an action for each value, providing an enumerated integer. This method is purely for the convenience of chaining.
-		/// </summary>
-		/// <param name="count">How many times to execute the action.</param>
-		/// <returns>This Deserializer</returns>
-		public Deserializer ForEach(int count, Action<int> action) {
-			for (var i = ReadIndex; i < count; i++)
-				action(i);
-			return this;
-		}
 
-		/// <summary>
-		/// Clones the remaining bytes in the buffer.
-		/// </summary>
+		/// <summary>Clones the remaining bytes in the buffer.</summary>
 		/// <returns>A new byte array containing the remaining bytes in the buffer.</returns>
 		public byte[] CloneOutArray() {
 			var result = new byte[Remaining];
 			Array.Copy(buffer, ReadIndex, result, 0, Remaining);
 			return result;
+		}
+		
+		public Deserializer Validate<T>(Func<T> constructor, out T variable, Action onOverflow = null) {
+			if (Overflowed) {
+				onOverflow?.Invoke();
+				variable = default;
+			}
+			else variable = constructor();
+			return this;
 		}
 		
 		
@@ -82,8 +67,11 @@ namespace QuickBin {
 		private Deserializer ReadGeneric<T>(int width, Func<byte[], int, T> f, out T produced) {
 			var nextIndex = ReadIndex + width;
 			// It's okay if ReadIndex + width == buffer.Length, because index represents the next byte to read, not the last byte read.
-			if (nextIndex > buffer.Length) throw new IndexOutOfRangeException("Read exceeds length of buffer.");
-			if (nextIndex > ForbiddenIndex) throw new ForbiddenIndexException(ForbiddenIndex, ReadIndex);
+			if (nextIndex > buffer.Length || nextIndex > ForbiddenIndex) {
+				Overflowed = true;
+				produced = default;
+				return this;
+			}
 
 			produced = f(buffer, ReadIndex);
 			ReadIndex = nextIndex;
@@ -92,17 +80,12 @@ namespace QuickBin {
 		}
 
 		private Deserializer ReadGeneric<T>(int? byteLength, Func<byte[], int, int, T> f, out T produced) {
-			if (!byteLength.HasValue)
-				byteLength = Remaining;
-			
-			var nextIndex = ReadIndex + byteLength.Value;
-			if (nextIndex > buffer.Length) throw new IndexOutOfRangeException("Read exceeds length of buffer.");
-			if (nextIndex > ForbiddenIndex) throw new ForbiddenIndexException(ForbiddenIndex, ReadIndex);
-			
-			produced = f(buffer, ReadIndex, byteLength.Value);
-			ReadIndex = nextIndex;
-			boolPlace = 0;
-			return this;
+			var width = byteLength ?? Remaining;
+			if (width == 0) {
+				produced = default;
+				return this;
+			}
+			return ReadGeneric(width, (b, i) => f(b, i, width), out produced);
 		}
 
 		public Deserializer Read(out bool produced)   => ReadGeneric(sizeof(bool), BitConverter.ToBoolean, out produced);
@@ -176,9 +159,5 @@ namespace QuickBin {
 			.Read(out int build)
 			.Read(out int revision)
 			.Assign(new(major, minor, build, revision), out produced);
-	}
-
-	public class ForbiddenIndexException : Exception {
-		public ForbiddenIndexException(int forbidden, int index) : base($"Attempted to read at index {index}, which is beyond the forbidden index of {forbidden}.") {}
 	}
 }

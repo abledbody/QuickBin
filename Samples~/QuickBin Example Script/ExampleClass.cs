@@ -43,9 +43,14 @@ namespace QuickBin.Example {
 				.Read(out string name, nameLength)
 				.Read(out short id)
 				.Read(out Vector2 velocity)
-				// The Assign method is a convenience method that allows for expression bodies like this.
-				// It is exactly equivalent to `produced = new(name, id, velocity);`.
-				.Assign(new(name, id, velocity), out produced);
+				// It's possible for the Deserializer to overflow the buffer. If this happens,
+				// calling Validate will not execute the constructor, and will instead return the default value.
+				// You can also specify an action to execute if the buffer overflows.
+				.Validate(
+					() => new(name, id, velocity),
+					out produced,
+					() => throw new System.OutOfRangeException("Not enough bytes to deserialize ExampleClass.")
+				);
 
 		// Note that this is not necessarily a smart way to do a Clone,
 		// but it's a good example of how to use QuickBin at the top level.
