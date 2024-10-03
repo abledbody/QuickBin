@@ -50,10 +50,8 @@ namespace QuickBin {
 			return result;
 		}
 		
-		public Deserializer Validate<T>(Func<T> constructor, out T variable, Func<T> onOverflow = null) {
-			variable = Overflowed ? (onOverflow == null ? default : onOverflow()) : constructor();
-			return this;
-		}
+		public Deserializer Validate<T>(Func<T> constructor, out T variable, Func<T> onOverflow = null) =>
+			this.Assign(Overflowed ? (onOverflow == null ? default : onOverflow()) : constructor(), out variable);
 		
 		
 		private static byte[] Extract(byte[] buffer, int index, int length) => buffer[index..(index + length)];
@@ -75,14 +73,9 @@ namespace QuickBin {
 			return this;
 		}
 
-		private Deserializer ReadGeneric<T>(int? byteLength, Func<byte[], int, int, T> f, out T produced) {
-			var width = byteLength ?? Remaining;
-			if (width == 0) {
-				produced = default;
-				return this;
-			}
-			return ReadGeneric(width, (b, i) => f(b, i, width), out produced);
-		}
+		private Deserializer ReadGeneric<T>(int? byteLength, Func<byte[], int, int, T> f, out T produced) =>
+			this.Assign(byteLength ?? Remaining, out var width)
+			.ReadGeneric(width, (b, i) => f(b, i, width), out produced);
 
 		public Deserializer Read(out bool produced)   => ReadGeneric(sizeof(bool), BitConverter.ToBoolean, out produced);
 		public Deserializer Read(out byte produced)   => ReadGeneric(sizeof(byte), (b,i) => b[i], out produced);
@@ -104,22 +97,32 @@ namespace QuickBin {
 		public Deserializer Read(out byte[] produced, int? length = null) =>
 			ReadGeneric(length, Extract, out produced);
 		
-		public delegate int LengthReader(Deserializer buffer);
-		public Deserializer Read(out string produced, TextEncoding encoding, LengthReader readLen) =>
-			Read(out produced, encoding, readLen(this));
+		public delegate bool LengthReader(Deserializer buffer, out int len);
+		public Deserializer Read(out string produced, TextEncoding encoding, LengthReader readLen) {
+			if (readLen(this, out var len)) {
+				produced = default;
+				return this;
+			}
+			return Read(out produced, encoding, len);
+		}
 		public Deserializer Read(out string produced, LengthReader readLen) =>
 			Read(out produced, TextEncoding.UTF8, readLen);
-		public Deserializer Read(out byte[] produced, LengthReader readLen) =>
-			Read(out produced, readLen(this));
+		public Deserializer Read(out byte[] produced, LengthReader readLen) {
+			if (readLen(this, out var len)) {
+				produced = default;
+				return this;
+			}
+			return Read(out produced, len);
+		}
 		
-		public static int Len_i64(Deserializer buffer) => buffer.Read(out long len).Output((int)len);
-		public static int Len_u64(Deserializer buffer) => buffer.Read(out ulong len).Output((int)len);
-		public static int Len_i32(Deserializer buffer) => buffer.Read(out int len).Output(len);
-		public static int Len_u32(Deserializer buffer) => buffer.Read(out uint len).Output((int)len);
-		public static int Len_i16(Deserializer buffer) => buffer.Read(out short len).Output(len);
-		public static int Len_u16(Deserializer buffer) => buffer.Read(out ushort len).Output(len);
-		public static int Len_i8(Deserializer buffer) => buffer.Read(out sbyte len).Output(len);
-		public static int Len_u8(Deserializer buffer) => buffer.Read(out byte len).Output(len);
+		public static bool Len_i64(Deserializer buffer, out int len) => buffer.Read(out long   _len).Assign((int)_len, out len).Output(buffer.Overflowed);
+		public static bool Len_u64(Deserializer buffer, out int len) => buffer.Read(out ulong  _len).Assign((int)_len, out len).Output(buffer.Overflowed);
+		public static bool Len_i32(Deserializer buffer, out int len) => buffer.Read(out int    _len).Assign(     _len, out len).Output(buffer.Overflowed);
+		public static bool Len_u32(Deserializer buffer, out int len) => buffer.Read(out uint   _len).Assign((int)_len, out len).Output(buffer.Overflowed);
+		public static bool Len_i16(Deserializer buffer, out int len) => buffer.Read(out short  _len).Assign(     _len, out len).Output(buffer.Overflowed);
+		public static bool Len_u16(Deserializer buffer, out int len) => buffer.Read(out ushort _len).Assign(     _len, out len).Output(buffer.Overflowed);
+		public static bool Len_i8 (Deserializer buffer, out int len) => buffer.Read(out sbyte  _len).Assign(     _len, out len).Output(buffer.Overflowed);
+		public static bool Len_u8 (Deserializer buffer, out int len) => buffer.Read(out byte   _len).Assign(     _len, out len).Output(buffer.Overflowed);
 
 		/// <summary>
 		/// Reads booleans from the same byte if possible.
