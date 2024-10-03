@@ -14,22 +14,20 @@ var helloWorld = "Hello, QuickBin!";
 var buffer = new Serializer()
   .Write(10)
   .Write(18.5f)
-  .Write(helloWorld.Length)
-  .Write(helloWorld);
+  .Write(helloWorld, Serializer.Len_u16);
 
 byte[] bytes = buffer;
 ```
 
 ## The Deserializer class
-The deserializer holds three pieces of information: A reference to a `byte[] buffer`, an `int ReadIndex`, and an `int ForbiddenIndex`. The deserializer will never mutate the byte array, and can effectively only read between `ReadIndex` and `ForbiddenIndex`. Every time you call `Deserializer.Read`, `ReadIndex` will increment by the number of bytes read for the specified type. If you attempt to read data beyond the end of the buffer, or beyond `ForbiddenIndex`, QuickBin will throw an exception.
+The deserializer is primarily a wrapper around a `byte[] buffer`, with an `int ReadIndex`, an `int ForbiddenIndex`. The deserializer will never mutate the byte array, and can effectively only read between `ReadIndex` and `ForbiddenIndex`. Every time you call `Deserializer.Read`, `ReadIndex` will increment by the number of bytes read for the specified type. If you attempt to read data beyond the end of the buffer, or beyond `ForbiddenIndex`, it will stop producing meaningful data, and `Deserializer.Overflowed` will be set to true.
 
 Each overload for `Deserializer.Read` provides an `out` argument. Using initialization syntax or providing an existing typed field is how the deserializer selects the correct overload method for converting bytes into a type.
 ```cs
 new Deserializer(bytes)
   .Read(out int firstNumber)
   .Read(out float secondNumber)
-  .Read(out int helloWorldLength)
-  .Read(out helloWorld, helloWorldLength);
+  .Read(out helloWorld, Deserializer.Len_u16);
 
 Debug.Log($"firstNumber: {firstNumber}, secondNumber: {secondNumber}, helloWorld: {helloWorld}");
 ```
@@ -45,6 +43,6 @@ public static partial class QuickBinExtensions {
   public static Deserializer Read(this Deserializer buffer, out ExampleClass produced) => buffer
     .Read(out int foo)
     .Read(out double bar)
-    .Return(new(foo, bar), out produced);
+    .Validate(() => new(foo, bar), out produced);
 }
 ```

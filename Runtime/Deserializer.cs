@@ -90,31 +90,11 @@ namespace QuickBin {
 		public Deserializer Read(out float produced)  => ReadGeneric(sizeof(float), BitConverter.ToSingle, out produced);
 		public Deserializer Read(out double produced) => ReadGeneric(sizeof(double), BitConverter.ToDouble, out produced);
 		
-		public Deserializer Read(out string produced, TextEncoding encoding, int? length = null) =>
-			ReadGeneric(length, encoding.GetString, out produced);
-		public Deserializer Read(out string produced, int? length = null) =>
-			Read(out produced, TextEncoding.UTF8, length);
-		public Deserializer Read(out byte[] produced, int? length = null) =>
-			ReadGeneric(length, Extract, out produced);
-		
+		/// <summary>A method that reads the length of a byte array from the Deserializer.</summary>
+		/// <param name="buffer">The Deserializer to read the length from.</param>
+		/// <param name="len">The length of the byte array.</param>
+		/// <returns>Whether the Deserializer overflowed.</returns>
 		public delegate bool LengthReader(Deserializer buffer, out int len);
-		public Deserializer Read(out string produced, TextEncoding encoding, LengthReader readLen) {
-			if (readLen(this, out var len)) {
-				produced = default;
-				return this;
-			}
-			return Read(out produced, encoding, len);
-		}
-		public Deserializer Read(out string produced, LengthReader readLen) =>
-			Read(out produced, TextEncoding.UTF8, readLen);
-		public Deserializer Read(out byte[] produced, LengthReader readLen) {
-			if (readLen(this, out var len)) {
-				produced = default;
-				return this;
-			}
-			return Read(out produced, len);
-		}
-		
 		public static bool Len_i64(Deserializer buffer, out int len) => buffer.Read(out long   _len).Assign((int)_len, out len).Output(buffer.Overflowed);
 		public static bool Len_u64(Deserializer buffer, out int len) => buffer.Read(out ulong  _len).Assign((int)_len, out len).Output(buffer.Overflowed);
 		public static bool Len_i32(Deserializer buffer, out int len) => buffer.Read(out int    _len).Assign(     _len, out len).Output(buffer.Overflowed);
@@ -123,6 +103,57 @@ namespace QuickBin {
 		public static bool Len_u16(Deserializer buffer, out int len) => buffer.Read(out ushort _len).Assign(     _len, out len).Output(buffer.Overflowed);
 		public static bool Len_i8 (Deserializer buffer, out int len) => buffer.Read(out sbyte  _len).Assign(     _len, out len).Output(buffer.Overflowed);
 		public static bool Len_u8 (Deserializer buffer, out int len) => buffer.Read(out byte   _len).Assign(     _len, out len).Output(buffer.Overflowed);
+		
+		
+		/// <summary>Reads a string from the Deserializer.</summary>
+		/// <param name="produced">The string that was read.</param>
+		/// <param name="encoding">The encoding to use.</param>
+		/// <param name="length">The length of the string in bytes. Defaults to the remaining bytes in the buffer.</param>
+		public Deserializer Read(out string produced, TextEncoding encoding, int? length = null) =>
+			ReadGeneric(length, encoding.GetString, out produced);
+		
+		/// <summary>Reads a UTF-8 string from the Deserializer.</summary>
+		/// <param name="produced">The string that was read.</param>
+		/// <param name="length">The length of the string in bytes.</param>
+		public Deserializer Read(out string produced, int? length = null) =>
+			Read(out produced, TextEncoding.UTF8, length);
+		
+		/// <summary>Reads a byte array from the Deserializer.</summary>
+		/// <param name="produced">The byte array that was read.</param>
+		/// <param name="length">The length of the byte array in bytes. Defaults to the remaining bytes in the buffer.</param>
+		public Deserializer Read(out byte[] produced, int? length = null) =>
+			ReadGeneric(length, Extract, out produced);
+		
+		
+		/// <summary>Reads a string from the Deserializer.</summary>
+		/// <param name="produced">The string that was read.</param>
+		/// <param name="encoding">The encoding to use.</param>
+		/// <param name="readLen">The method to read out the length of the string. (e.g. <c>Len_i32</c>)</param>
+		public Deserializer Read(out string produced, TextEncoding encoding, LengthReader readLen) {
+			if (readLen(this, out var len)) {
+				produced = default;
+				return this;
+			}
+			return Read(out produced, encoding, len);
+		}
+		
+		/// <summary>Reads a UTF-8 string from the Deserializer.</summary>
+		/// <param name="produced">The string that was read.</param>
+		/// <param name="readLen">The method to read out the length of the string. (e.g. <c>Len_i32</c>)</param>
+		public Deserializer Read(out string produced, LengthReader readLen) =>
+			Read(out produced, TextEncoding.UTF8, readLen);
+		
+		/// <summary>Reads a byte array from the Deserializer.</summary>
+		/// <param name="produced">The byte array that was read.</param>
+		/// <param name="readLen">The method to read out the length of the byte array. (e.g. <c>Len_i32</c>)</param>
+		public Deserializer Read(out byte[] produced, LengthReader readLen) {
+			if (readLen(this, out var len)) {
+				produced = default;
+				return this;
+			}
+			return Read(out produced, len);
+		}
+		
 
 		/// <summary>
 		/// Reads booleans from the same byte if possible.

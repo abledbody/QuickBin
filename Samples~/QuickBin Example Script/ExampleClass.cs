@@ -26,30 +26,31 @@ namespace QuickBin.Example {
 			// the calls to insert some functionality in between.
 			// Both serialization and deserialization are done in the same order.
 
-			// QuickBin requires you to serialize the length of strings and arrays yourself.
-			// This is done so you can specify the type used to store the length.
-			buffer.Write(name.Length)
-				.Write(name)
+			// When writing a string, you can specify a length writer which will write the length
+			// of the string as a specific integer type just before the string itself.
+			buffer.Write(name, Serializer.Len_u16)
 				.Write(id)
 				.Write(velocity);
 		
 		public static Deserializer Deserialize(Deserializer buffer, out ExampleClass produced) =>
 			// Thanks to the "out" keyword, you can inline the declaration of variables,
-			// and immediately use them in the next method call.
+			// and immediately use them in the next method call. It also allows you to specify
+			// which type you want to extract with each call without the use of generics or verbose method names.
 			
-			// It also allows you to specify which type you want to extract with each call
-			// without the use of generics or verbose method names.
-			buffer.Read(out int nameLength)
+			// For demonstration purposes, we're skipping the use of Deserializer.Len_u16 here, and
+			// reading the string length directly from the buffer. This is a perfectly valid way to do it,
+			// although it's recommended that you make serializer/deserializer symmetric for readability.
+			buffer.Read(out ushort nameLength)
 				.Read(out string name, nameLength)
 				.Read(out short id)
 				.Read(out Vector2 velocity)
 				// It's possible for the Deserializer to overflow the buffer. If this happens,
-				// calling Validate will not execute the constructor, and will instead return the default value.
-				// You can also specify an action to execute if the buffer overflows.
+				// calling Validate will not execute the constructor, and will instead perform an
+				// alternative action, or just output a default value if one is not provided.
 				.Validate(
 					() => new(name, id, velocity),
 					out produced,
-					() => throw new System.OutOfRangeException("Not enough bytes to deserialize ExampleClass.")
+					() => new(null, -1, Vector2.Zero)
 				);
 
 		// Note that this is not necessarily a smart way to do a Clone,
@@ -60,6 +61,11 @@ namespace QuickBin.Example {
 			// Serializer can be implicitly cast to a byte array so you don't have to think about it.
 			// A byte array is also what the constructor for Deserializer takes, so this becomes a dead simple operation.
 			new Deserializer(serializer).Read(out ExampleClass produced);
+			
+			// At any point in the call stack you can check buffer.Overflowed to see
+			// if there was enough data to produce a valid object.
+			if (buffer.Overflowed)
+				throw new System.Exception("Oh no! Not enough data.");
 
 			return produced;
 		}

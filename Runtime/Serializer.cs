@@ -24,16 +24,6 @@ namespace QuickBin {
 
 		public static implicit operator byte[](Serializer serializer) => serializer.bytes.ToArray();
 		public static implicit operator List<byte>(Serializer serializer) => serializer.bytes;
-		
-		/// <summary>
-		/// Executes an action. This method is purely for the convenience of chaining.
-		/// </summary>
-		/// <param name="action"></param>
-		/// <returns></returns>
-		public Serializer Then(Action action) {
-			action();
-			return this;
-		}
 
 		/// <summary>
 		/// Clears the internal List so that the Serializer can be reused.
@@ -41,18 +31,6 @@ namespace QuickBin {
 		/// <returns>This Serializer.</returns>
 		public Serializer Clear() {
 			bytes.Clear();
-			return this;
-		}
-		
-		/// <summary>
-		/// Executes an action for each value in the specified IEnumerable. This method is purely for the convenience of chaining.
-		/// </summary>
-		/// <param name="values">The IEnumerable of values to act on.</param>
-		/// <param name="action">The action to execute on each value.</param>
-		/// <returns>This serializer.</returns>
-		public Serializer ForEach<T>(IEnumerable<T> values, Action<T> action) {
-			foreach (var value in values)
-				action(value);
 			return this;
 		}
 
@@ -95,12 +73,34 @@ namespace QuickBin {
 		public static Serializer Len_i8(Serializer buffer, byte[] value) =>  buffer.Write((sbyte)value.Length);
 		public static Serializer Len_u8(Serializer buffer, byte[] value) =>  buffer.Write((byte)value.Length);
 		
+		/// <summary>Writes a byte array to the Serializer.</summary>
+		/// <param name="value">The byte array to write.</param>
 		public Serializer Write(byte[] value) => WriteGeneric(value, x => x);
+		
+		/// <summary>Writes a byte array to the Serializer.</summary>
+		/// <param name="value">The byte array to write.</param>
+		/// <param name="writeLen">The method to use to write the length of the byte array. (e.g. <c>Len_i32</c>)</param>
 		public Serializer Write(byte[] value, LengthWriter writeLen) => writeLen(this, value).Write(value);
 		
+		
+		/// <summary>Writes a string to the Serializer.</summary>
+		/// <param name="value">The string to write.</param>
+		/// <param name="encoding">The encoding to use when converting the string to bytes.</param>
 		public Serializer Write(string value, TextEncoding encoding) => Write(encoding.GetBytes(value));
+		
+		/// <summary>Writes a string to the Serializer.</summary>
+		/// <param name="value">The string to write.</param>
+		/// <param name="encoding">The encoding to use when converting the string to bytes.</param>
+		/// <param name="writeLen">The method to use to write the length of the string. (e.g. <c>Len_i32</c>)</param>
 		public Serializer Write(string value, TextEncoding encoding, LengthWriter writeLen) => Write(encoding.GetBytes(value), writeLen);
+		
+		/// <summary>Writes a string to the Serializer using UTF-8 encoding.</summary>
+		/// <param name="value">The string to write.</param>
 		public Serializer Write(string value) => Write(value, TextEncoding.UTF8);
+		
+		/// <summary>Writes a string to the Serializer using UTF-8 encoding.</summary>
+		/// <param name="value">The string to write.</param>
+		/// <param name="writeLen">The method to use to write the length of the string. (e.g. <c>Len_i32</c>)</param>
 		public Serializer Write(string value, LengthWriter writeLen) => Write(value, TextEncoding.UTF8, writeLen);
 		
 

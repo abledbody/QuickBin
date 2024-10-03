@@ -36,5 +36,16 @@ namespace QuickBin.ChainExtensions {
 			if (condition) action(@this);
 			return @this;
 		}
+		
+		/// <summary>Executes an action for each value in the specified IEnumerable.</summary>
+		/// <param name="values">The IEnumerable of values to act on.</param>
+		/// <param name="action">The action to execute on each value.</param>
+		/// <returns>This serializer.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public TChain ForEach<TChain, T>(TChain @this, IEnumerable<T> values, Action<T> action) {
+			foreach (var value in values)
+				action(value);
+			return @this;
+		}
 	}
 }
