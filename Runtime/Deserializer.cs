@@ -42,14 +42,6 @@ namespace QuickBin {
 		public static implicit operator byte[](Deserializer deserializer) => deserializer.buffer;
 		public static implicit operator List<byte>(Deserializer deserializer) => new(deserializer.buffer);
 
-		/// <summary>Clones the remaining bytes in the buffer.</summary>
-		/// <returns>A new byte array containing the remaining bytes in the buffer.</returns>
-		public byte[] CloneOutArray() {
-			var result = new byte[Remaining];
-			Array.Copy(buffer, ReadIndex, result, 0, Remaining);
-			return result;
-		}
-		
 		public Deserializer Validate<T>(Func<T> constructor, out T variable, Func<T> onOverflow = null) =>
 			this.Assign(Overflowed ? (onOverflow == null ? default : onOverflow()) : constructor(), out variable);
 		
@@ -121,7 +113,7 @@ namespace QuickBin {
 		public static Deserializer Read(this Deserializer buffer, out long produced)   => buffer.ReadGeneric(sizeof(long), BitConverter.ToInt64, out produced);
 		public static Deserializer Read(this Deserializer buffer, out ulong produced)  => buffer.ReadGeneric(sizeof(ulong), BitConverter.ToUInt64, out produced);
 		public static Deserializer Read(this Deserializer buffer, out float produced)  => buffer.ReadGeneric(sizeof(float), BitConverter.ToSingle, out produced);
-		public static Deserializer Read(this Deserializer buffer, out double produced) => buffer.ReadGeneric(sizeof(double), BitConverter.ToDouble, out produced);		/// <summary>Reads a string from the Deserializer.</summary>
+		public static Deserializer Read(this Deserializer buffer, out double produced) => buffer.ReadGeneric(sizeof(double), BitConverter.ToDouble, out produced);
 		
 		
 		/// <summary>Reads a string from the Deserializer.</summary>
