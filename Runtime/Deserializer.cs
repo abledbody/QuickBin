@@ -41,7 +41,7 @@ namespace QuickBin {
 
 		public static implicit operator byte[](Deserializer deserializer) => deserializer.buffer;
 		public static implicit operator List<byte>(Deserializer deserializer) => new(deserializer.buffer);
-
+		
 		public Deserializer Validate<T>(Func<T> constructor, out T variable, Func<T> onOverflow = null) =>
 			this.Assign(Overflowed ? (onOverflow == null ? default : onOverflow()) : constructor(), out variable);
 		
@@ -99,6 +99,20 @@ namespace QuickBin {
 			boolPlace %= 8;
 			return this;
 		}
+		
+		public delegate Deserializer ReadOperation<T>(out T produced);
+		/// <summary>Reads several values of the same type from the Deserializer.</summary>
+		/// <param name="produced">The values that were read.</param>
+		/// <param name="read">The method to use to read each value. Most <c>buffer.Read</c> methods should satisfy this signature.</param>
+		/// <param name="count">The number of values to read.</param>
+		/// <typeparam name="T">The type of the values to read.</typeparam>
+		/// <returns>This Deserializer.</returns>
+		public Deserializer ReadMany<T>(out T[] produced, ReadOperation<T> read, int count) {
+			produced = new T[count];
+			for (var i = 0; i < count; i++)
+				read(out produced[i]);
+			return this;
+		}
 	}
 	
 	public static partial class QuickBinExtensions {
@@ -114,8 +128,8 @@ namespace QuickBin {
 		public static Deserializer Read(this Deserializer buffer, out ulong produced)  => buffer.ReadGeneric(sizeof(ulong), BitConverter.ToUInt64, out produced);
 		public static Deserializer Read(this Deserializer buffer, out float produced)  => buffer.ReadGeneric(sizeof(float), BitConverter.ToSingle, out produced);
 		public static Deserializer Read(this Deserializer buffer, out double produced) => buffer.ReadGeneric(sizeof(double), BitConverter.ToDouble, out produced);
-		
-		
+
+
 		/// <summary>Reads a string from the Deserializer.</summary>
 		/// <param name="produced">The string that was read.</param>
 		/// <param name="encoding">The encoding to use.</param>

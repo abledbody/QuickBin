@@ -165,6 +165,21 @@ namespace QuickBin.Tests {
 			Assert.IsTrue(overflowed);
 			Assert.IsTrue(reader.Overflowed);
 		}
+		
+		[Test]
+		public static void WriteReadMany() {
+			var arr = new int[] {1, 2, 3, 4, 5};
+			
+			var serializer = new Serializer();
+			serializer.Write((ushort)arr.Length)
+				.WriteMany(arr, serializer.Write);
+			
+			var deserializer = new Deserializer(serializer);
+			deserializer.Read(out ushort count)
+				.ReadMany(out int[] produced, deserializer.Read, count);
+			
+			Assert.AreEqual(arr, produced);
+		}
 	}
 	
 	// The following test ensures that even if a type can be implicitly cast to another type, the correct Write method is called.
