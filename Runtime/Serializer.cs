@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using TextEncoding = System.Text.Encoding;
 
 namespace QuickBin {
-	public sealed partial class Serializer {
+	public sealed class Serializer {
 		readonly List<byte> bytes;
 		int boolPlace = 0;
 		
@@ -34,30 +34,17 @@ namespace QuickBin {
 			return this;
 		}
 
-		private Serializer WriteGeneric<T>(T value, Func<T, byte> f) {
+		internal Serializer WriteGeneric<T>(T value, Func<T, byte> f) {
 			bytes.Add(f(value));
 			boolPlace = 0;
 			return this;
 		}
 
-		private Serializer WriteGeneric<T>(T value, Func<T, byte[]> f) {
+		internal Serializer WriteGeneric<T>(T value, Func<T, byte[]> f) {
 			bytes.AddRange(f(value));
 			boolPlace = 0;
 			return this;
 		}
-
-		public Serializer Write(bool value)   => WriteGeneric(value, x => x ? (byte)1 : (byte)0);
-		public Serializer Write(byte value)   => WriteGeneric(value, x => x);
-		public Serializer Write(sbyte value)  => WriteGeneric(value, x => (byte)x);
-		public Serializer Write(char value)   => WriteGeneric(value, BitConverter.GetBytes);
-		public Serializer Write(short value)  => WriteGeneric(value, BitConverter.GetBytes);
-		public Serializer Write(ushort value) => WriteGeneric(value, BitConverter.GetBytes);
-		public Serializer Write(int value)    => WriteGeneric(value, BitConverter.GetBytes);
-		public Serializer Write(uint value)   => WriteGeneric(value, BitConverter.GetBytes);
-		public Serializer Write(long value)   => WriteGeneric(value, BitConverter.GetBytes);
-		public Serializer Write(ulong value)  => WriteGeneric(value, BitConverter.GetBytes);
-		public Serializer Write(float value)  => WriteGeneric(value, BitConverter.GetBytes);
-		public Serializer Write(double value) => WriteGeneric(value, BitConverter.GetBytes);
 		
 		/// <summary>A method that writes the length of a byte array to the Serializer.</summary>
 		/// <param name="buffer">The Serializer to write the length to.</param>
@@ -73,39 +60,6 @@ namespace QuickBin {
 		public static Serializer Len_i8(Serializer buffer, byte[] value) =>  buffer.Write((sbyte)value.Length);
 		public static Serializer Len_u8(Serializer buffer, byte[] value) =>  buffer.Write((byte)value.Length);
 		
-		/// <summary>Writes a byte array to the Serializer.</summary>
-		/// <param name="value">The byte array to write.</param>
-		public Serializer Write(byte[] value) => WriteGeneric(value, x => x);
-		
-		/// <summary>Writes a byte array to the Serializer.</summary>
-		/// <param name="value">The byte array to write.</param>
-		/// <param name="writeLen">The method to use to write the length of the byte array. (e.g. <c>Len_i32</c>)</param>
-		public Serializer Write(byte[] value, LengthWriter writeLen) => writeLen(this, value).Write(value);
-		
-		
-		/// <summary>Writes a string to the Serializer.</summary>
-		/// <param name="value">The string to write.</param>
-		/// <param name="encoding">The encoding to use when converting the string to bytes.</param>
-		public Serializer Write(string value, TextEncoding encoding) => Write(encoding.GetBytes(value));
-		
-		/// <summary>Writes a string to the Serializer.</summary>
-		/// <param name="value">The string to write.</param>
-		/// <param name="encoding">The encoding to use when converting the string to bytes.</param>
-		/// <param name="writeLen">The method to use to write the length of the string. (e.g. <c>Len_i32</c>)</param>
-		public Serializer Write(string value, TextEncoding encoding, LengthWriter writeLen) => Write(encoding.GetBytes(value), writeLen);
-		
-		/// <summary>Writes a string to the Serializer using UTF-8 encoding.</summary>
-		/// <param name="value">The string to write.</param>
-		public Serializer Write(string value) => Write(value, TextEncoding.UTF8);
-		
-		/// <summary>Writes a string to the Serializer using UTF-8 encoding.</summary>
-		/// <param name="value">The string to write.</param>
-		/// <param name="writeLen">The method to use to write the length of the string. (e.g. <c>Len_i32</c>)</param>
-		public Serializer Write(string value, LengthWriter writeLen) => Write(value, TextEncoding.UTF8, writeLen);
-		
-
-		public Serializer Write(DateTime value) => Write(value.Ticks);
-		public Serializer Write(TimeSpan value) => Write(value.Ticks);
 
 		/// <summary>
 		/// Writes booleans into the same byte if possible.
@@ -118,7 +72,7 @@ namespace QuickBin {
 				boolPlace = 0;
 			
 			if (boolPlace == 0)
-				Write(value);
+				this.Write(value);
 			else
 				bytes[^1] |= (byte)(value ? 1 << boolPlace : 0);
 			
@@ -126,9 +80,73 @@ namespace QuickBin {
 			boolPlace %= 8;
 			return this;
 		}
-
-		public Serializer Write(Version value) =>
-			Write(value.Major)
+	}
+	
+	/// <summary>
+	/// The reason that absolutely <i>none</i> of the standard Write/Read methods are built into their respective classes is
+	/// because they would take precedence over other extension methods. For MonoBehaviours, this is a huge problem, because
+	/// they are all implicitly castable to bool. C# would rather cast a MonoBehaviour to a bool than use an extension
+	/// method. Any time you'd try to call Write(MonoBehaviour), you'd get Write(bool) instead. This problem extends to all
+	/// implicitly castable types. The only effective way to avoid this is to give all Write methods the same priority,
+	/// which means making them all extension methods. Read methods are also extension methods for consistency.
+	/// </summary>
+	public static partial class QuickBinExtensions {
+		public static Serializer Write(this Serializer buffer, bool value)   => buffer.WriteGeneric(value, x => x ? (byte)1 : (byte)0);
+		public static Serializer Write(this Serializer buffer, byte value)   => buffer.WriteGeneric(value, x => x);
+		public static Serializer Write(this Serializer buffer, sbyte value)  => buffer.WriteGeneric(value, x => (byte)x);
+		public static Serializer Write(this Serializer buffer, char value)   => buffer.WriteGeneric(value, BitConverter.GetBytes);
+		public static Serializer Write(this Serializer buffer, short value)  => buffer.WriteGeneric(value, BitConverter.GetBytes);
+		public static Serializer Write(this Serializer buffer, ushort value) => buffer.WriteGeneric(value, BitConverter.GetBytes);
+		public static Serializer Write(this Serializer buffer, int value)    => buffer.WriteGeneric(value, BitConverter.GetBytes);
+		public static Serializer Write(this Serializer buffer, uint value)   => buffer.WriteGeneric(value, BitConverter.GetBytes);
+		public static Serializer Write(this Serializer buffer, long value)   => buffer.WriteGeneric(value, BitConverter.GetBytes);
+		public static Serializer Write(this Serializer buffer, ulong value)  => buffer.WriteGeneric(value, BitConverter.GetBytes);
+		public static Serializer Write(this Serializer buffer, float value)  => buffer.WriteGeneric(value, BitConverter.GetBytes);
+		public static Serializer Write(this Serializer buffer, double value) => buffer.WriteGeneric(value, BitConverter.GetBytes);
+		
+		
+		/// <summary>Writes a byte array to the Serializer.</summary>
+		/// <param name="value">The byte array to write.</param>
+		public static Serializer Write(this Serializer buffer, byte[] value) => buffer
+			.WriteGeneric(value, x => x);
+		
+		/// <summary>Writes a byte array to the Serializer.</summary>
+		/// <param name="value">The byte array to write.</param>
+		/// <param name="writeLen">The method to use to write the length of the byte array. (e.g. <c>Len_i32</c>)</param>
+		public static Serializer Write(this Serializer buffer, byte[] value, Serializer.LengthWriter writeLen) =>
+			writeLen(buffer, value).Write(value);
+		
+		
+		/// <summary>Writes a string to the Serializer.</summary>
+		/// <param name="value">The string to write.</param>
+		/// <param name="encoding">The encoding to use when converting the string to bytes.</param>
+		public static Serializer Write(this Serializer buffer, string value, TextEncoding encoding) => buffer
+			.Write(encoding.GetBytes(value));
+		
+		/// <summary>Writes a string to the Serializer.</summary>
+		/// <param name="value">The string to write.</param>
+		/// <param name="encoding">The encoding to use when converting the string to bytes.</param>
+		/// <param name="writeLen">The method to use to write the length of the string. (e.g. <c>Len_i32</c>)</param>
+		public static Serializer Write(this Serializer buffer, string value, TextEncoding encoding, Serializer.LengthWriter writeLen) => buffer
+			.Write(encoding.GetBytes(value), writeLen);
+		
+		/// <summary>Writes a string to the Serializer using UTF-8 encoding.</summary>
+		/// <param name="value">The string to write.</param>
+		public static Serializer Write(this Serializer buffer, string value) => buffer
+			.Write(value, TextEncoding.UTF8);
+		
+		/// <summary>Writes a string to the Serializer using UTF-8 encoding.</summary>
+		/// <param name="value">The string to write.</param>
+		/// <param name="writeLen">The method to use to write the length of the string. (e.g. <c>Len_i32</c>)</param>
+		public static Serializer Write(this Serializer buffer, string value, Serializer.LengthWriter writeLen) => buffer
+			.Write(value, TextEncoding.UTF8, writeLen);
+		
+		
+		public static Serializer Write(this Serializer buffer, DateTime value) => buffer.Write(value.Ticks);
+		public static Serializer Write(this Serializer buffer, TimeSpan value) => buffer.Write(value.Ticks);
+		
+		public static Serializer Write(this Serializer buffer, Version value) => buffer
+			.Write(value.Major)
 			.Write(value.Minor)
 			.Write(value.Build)
 			.Write(value.Revision);
