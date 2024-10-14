@@ -47,6 +47,16 @@ namespace QuickBin {
 			this.Assign(Overflowed ? (onOverflow == null ? default : onOverflow()) : constructor(), out variable);
 		
 		internal static byte[] Extract(ReadOnlySpan<byte> span) => span.ToArray();
+		
+		public delegate T IterationAction<T>(Deserializer buffer);
+		public Deserializer ForEach<T>(out IEnumerable<T> produced, IterationAction<T> action, int count) {
+			IEnumerable<T> Iterate() {
+				for (var i = 0; i < count; i++)
+					yield return action(this);
+			}
+			produced = Iterate();
+			return this;
+		}
 
 		// The ReadGeneric method is the core of the Deserializer.
 		// It handles advancing the ReadIndex, checking for overflow, and reading values from the buffer.
@@ -94,22 +104,6 @@ namespace QuickBin {
 			
 			boolPlace++;
 			boolPlace %= 8;
-			return this;
-		}
-		
-		public delegate Deserializer ReadOperation<T>(out T produced);
-		/// <summary>Reads several values of the same type from the Deserializer.</summary>
-		/// <param name="produced">The values that were read.</param>
-		/// <param name="read">The method to use to read each value. Most <c>buffer.Read</c> methods should satisfy this signature.</param>
-		/// <param name="count">The number of values to read.</param>
-		/// <typeparam name="T">The type of the values to read.</typeparam>
-		/// <returns>This Deserializer.</returns>
-		public Deserializer ReadMany<T>(out IEnumerable<T> produced, ReadOperation<T> read, int count) {
-			IEnumerable<T> Iterate() {
-				for (var i = 0; i < count; i++)
-					yield return read(out var value).Output(value);
-			}
-			produced = Iterate();
 			return this;
 		}
 	}

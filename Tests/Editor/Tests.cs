@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using QuickBin.ChainExtensions;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -203,13 +204,13 @@ namespace QuickBin.Tests {
 		public static void WriteReadMany() {
 			var arr = new int[] {1, 2, 3, 4, 5};
 			
-			var serializer = new Serializer();
-			serializer.Write((ushort)arr.Length)
-				.WriteMany(arr, serializer.Write);
+			var serializer = new Serializer()
+				.Write((ushort)arr.Length)
+				.ForEach(arr, (buffer, value) => buffer.Write(value));
 			
-			var deserializer = new Deserializer(serializer);
-			deserializer.Read(out ushort count)
-				.ReadMany(out IEnumerable<int> produced, deserializer.Read, count);
+			var deserializer = new Deserializer(serializer)
+				.Read(out ushort count)
+				.ForEach(out var produced, buffer => buffer.Read(out int value).Output(value), count);
 			
 			Assert.AreEqual(arr, produced.ToArray());
 		}

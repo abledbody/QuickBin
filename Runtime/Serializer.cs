@@ -30,6 +30,12 @@ namespace QuickBin {
 			return this;
 		}
 		
+		public Serializer ForEach<T>(IEnumerable<T> values, Action<Serializer, T> action) {
+			foreach (T value in values)
+				action(this, value);
+			return this;
+		}
+		
 		internal Serializer WriteGeneric<T>(int size, T value, ByteWriter<T> f) {
 			Span<byte> bytes = stackalloc byte[size];
 			f(bytes, value);
@@ -83,18 +89,6 @@ namespace QuickBin {
 			
 			boolPlace++;
 			boolPlace %= 8;
-			return this;
-		}
-		
-		public delegate Serializer WriteOperation<T>(T value);
-		/// <summary>Writes several values of the same type to the Serializer.</summary>
-		/// <param name="values">The values to write.</param>
-		/// <param name="write">The method to use to write each value. Most <c>buffer.Write</c> methods should satisfy this signature.</param>
-		/// <typeparam name="T">The type of the values to write.</typeparam>
-		/// <returns>This Serializer.</returns>
-		public Serializer WriteMany<T>(IEnumerable<T> values, WriteOperation<T> write) {
-			foreach (T value in values)
-				write(value);
 			return this;
 		}
 	}
