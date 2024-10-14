@@ -1,5 +1,6 @@
 using NUnit.Framework;
-
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace QuickBin.Tests {
@@ -208,9 +209,9 @@ namespace QuickBin.Tests {
 			
 			var deserializer = new Deserializer(serializer);
 			deserializer.Read(out ushort count)
-				.ReadMany(out int[] produced, deserializer.Read, count);
+				.ReadMany(out IEnumerable<int> produced, deserializer.Read, count);
 			
-			Assert.AreEqual(arr, produced);
+			Assert.AreEqual(arr, produced.ToArray());
 		}
 		
 		[Test]

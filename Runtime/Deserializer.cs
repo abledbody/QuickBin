@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Threading.Tasks;
 using QuickBin.ChainExtensions;
 
 namespace QuickBin {
@@ -105,10 +104,12 @@ namespace QuickBin {
 		/// <param name="count">The number of values to read.</param>
 		/// <typeparam name="T">The type of the values to read.</typeparam>
 		/// <returns>This Deserializer.</returns>
-		public Deserializer ReadMany<T>(out T[] produced, ReadOperation<T> read, int count) {
-			produced = new T[count];
-			for (var i = 0; i < count; i++)
-				read(out produced[i]);
+		public Deserializer ReadMany<T>(out IEnumerable<T> produced, ReadOperation<T> read, int count) {
+			IEnumerable<T> Iterate() {
+				for (var i = 0; i < count; i++)
+					yield return read(out var value).Output(value);
+			}
+			produced = Iterate();
 			return this;
 		}
 	}

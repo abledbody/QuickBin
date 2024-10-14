@@ -92,9 +92,9 @@ namespace QuickBin {
 		/// <param name="write">The method to use to write each value. Most <c>buffer.Write</c> methods should satisfy this signature.</param>
 		/// <typeparam name="T">The type of the values to write.</typeparam>
 		/// <returns>This Serializer.</returns>
-		public Serializer WriteMany<T>(T[] values, WriteOperation<T> write) {
-			for (int i = 0; i < values.Length; i++)
-				write(values[i]);
+		public Serializer WriteMany<T>(IEnumerable<T> values, WriteOperation<T> write) {
+			foreach (T value in values)
+				write(value);
 			return this;
 		}
 	}
