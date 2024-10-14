@@ -1,14 +1,13 @@
 using System;
 using System.Collections.Generic;
-using TextEncoding = System.Text.Encoding;
+using System.Text;
 using QuickBin.ChainExtensions;
 
 namespace QuickBin {
-	
 	public sealed class Deserializer {
-		readonly byte[] buffer;
-		int boolPlace = 0;
-		byte flagByte = 0;
+		private readonly byte[] buffer;
+		private int boolPlace = 0;
+		private byte flagByte = 0;
 		
 		/// <summary>The next index in the buffer that will be read from.</summary>
 		public int ReadIndex {get; private set;}
@@ -33,6 +32,7 @@ namespace QuickBin {
 		/// <param name="buffer">The byte array to deserialize from.</param>
 		/// <param name="readIndex">The index to start reading from.</param>
 		/// <param name="forbiddenIndex">The index of the first byte that is not readable by this Deserializer.</param>
+		/// <remarks>By default, Deserialize initializes to little-endian byte order.</remarks>
 		public Deserializer(byte[] buffer, int readIndex = 0, int? forbiddenIndex = null) {
 			this.buffer = buffer;
 			ReadIndex = readIndex;
@@ -45,28 +45,24 @@ namespace QuickBin {
 		public Deserializer Validate<T>(Func<T> constructor, out T variable, Func<T> onOverflow = null) =>
 			this.Assign(Overflowed ? (onOverflow == null ? default : onOverflow()) : constructor(), out variable);
 		
-		internal static byte[] Extract(byte[] buffer, int index, int length) => buffer[index..(index + length)];
+		internal static byte[] Extract(ReadOnlySpan<byte> span) => span.ToArray();
 
-		// These ReadGeneric methods are the core of the Deserializer.
-		// They make it possible to make every primitive Read method a single line.
-		internal Deserializer ReadGeneric<T>(int width, Func<byte[], int, T> f, out T produced) {
+		// The ReadGeneric method is the core of the Deserializer.
+		// It handles advancing the ReadIndex, checking for overflow, and reading values from the buffer.
+		internal Deserializer ReadGeneric<T>(int width, ByteReader<T> f, out T produced) {
 			var nextIndex = ReadIndex + width;
-			// It's okay if ReadIndex + width == buffer.Length, because index represents the next byte to read, not the last byte read.
+			// It's okay if nextIndex == buffer.Length, because ReadIndex represents the next byte to read, not the last byte read.
 			if (nextIndex > buffer.Length || nextIndex > ForbiddenIndex) {
 				Overflowed = true;
 				produced = default;
 				return this;
 			}
 
-			produced = f(buffer, ReadIndex);
+			produced = f(buffer.AsSpan(ReadIndex, width));
 			ReadIndex = nextIndex;
 			boolPlace = 0;
 			return this;
 		}
-
-		internal Deserializer ReadGeneric<T>(int? byteLength, Func<byte[], int, int, T> f, out T produced) =>
-			this.Assign(byteLength ?? Remaining, out var width)
-			.ReadGeneric(width, (b, i) => f(b, i, width), out produced);
 		
 		/// <summary>A method that reads the length of a byte array from the Deserializer.</summary>
 		/// <param name="buffer">The Deserializer to read the length from.</param>
@@ -116,45 +112,66 @@ namespace QuickBin {
 	}
 	
 	public static partial class QuickBinExtensions {
-		public static Deserializer Read(this Deserializer buffer, out bool produced)   => buffer.ReadGeneric(sizeof(bool), BitConverter.ToBoolean, out produced);
-		public static Deserializer Read(this Deserializer buffer, out byte produced)   => buffer.ReadGeneric(sizeof(byte), (b,i) => b[i], out produced);
-		public static Deserializer Read(this Deserializer buffer, out sbyte produced)  => buffer.ReadGeneric(sizeof(sbyte), (b,i) => (sbyte)b[i], out produced);
-		public static Deserializer Read(this Deserializer buffer, out char produced)   => buffer.ReadGeneric(sizeof(char), BitConverter.ToChar, out produced);
-		public static Deserializer Read(this Deserializer buffer, out short produced)  => buffer.ReadGeneric(sizeof(short), BitConverter.ToInt16, out produced);
-		public static Deserializer Read(this Deserializer buffer, out ushort produced) => buffer.ReadGeneric(sizeof(ushort), BitConverter.ToUInt16, out produced);
-		public static Deserializer Read(this Deserializer buffer, out int produced)    => buffer.ReadGeneric(sizeof(int), BitConverter.ToInt32, out produced);
-		public static Deserializer Read(this Deserializer buffer, out uint produced)   => buffer.ReadGeneric(sizeof(uint), BitConverter.ToUInt32, out produced);
-		public static Deserializer Read(this Deserializer buffer, out long produced)   => buffer.ReadGeneric(sizeof(long), BitConverter.ToInt64, out produced);
-		public static Deserializer Read(this Deserializer buffer, out ulong produced)  => buffer.ReadGeneric(sizeof(ulong), BitConverter.ToUInt64, out produced);
-		public static Deserializer Read(this Deserializer buffer, out float produced)  => buffer.ReadGeneric(sizeof(float), BitConverter.ToSingle, out produced);
-		public static Deserializer Read(this Deserializer buffer, out double produced) => buffer.ReadGeneric(sizeof(double), BitConverter.ToDouble, out produced);
-
+		public static Deserializer Read(this Deserializer buffer, out bool produced) => buffer.ReadGeneric(sizeof(bool),   BitConverter.ToBoolean,      out produced);
+		public static Deserializer Read(this Deserializer buffer, out byte produced) => buffer.ReadGeneric(sizeof(byte),   (span) => span[0],           out produced);
+		public static Deserializer Read(this Deserializer buffer, out sbyte produced) => buffer.ReadGeneric(sizeof(sbyte),  (span) => (sbyte)span[0],    out produced);
+		public static Deserializer Read(this Deserializer buffer, out char produced) => buffer.ReadGeneric(sizeof(char),   BitConverter.ToChar,         out produced);
+		
+		private static Deserializer Read(this Deserializer buffer, out short produced,  Endianness endianness) => buffer.ReadGeneric(sizeof(short),  endianness.read_i16, out produced);
+		private static Deserializer Read(this Deserializer buffer, out ushort produced, Endianness endianness) => buffer.ReadGeneric(sizeof(ushort), endianness.read_u16, out produced);
+		private static Deserializer Read(this Deserializer buffer, out int produced,    Endianness endianness) => buffer.ReadGeneric(sizeof(int),    endianness.read_i32, out produced);
+		private static Deserializer Read(this Deserializer buffer, out uint produced,   Endianness endianness) => buffer.ReadGeneric(sizeof(uint),   endianness.read_u32, out produced);
+		private static Deserializer Read(this Deserializer buffer, out long produced,   Endianness endianness) => buffer.ReadGeneric(sizeof(long),   endianness.read_i64, out produced);
+		private static Deserializer Read(this Deserializer buffer, out ulong produced,  Endianness endianness) => buffer.ReadGeneric(sizeof(ulong),  endianness.read_u64, out produced);
+		private static Deserializer Read(this Deserializer buffer, out float produced,  Endianness endianness) =>
+			buffer.ReadGeneric(sizeof(float),  span => BitConverter.Int32BitsToSingle(endianness.read_i32(span)), out produced);
+		private static Deserializer Read(this Deserializer buffer, out double produced, Endianness endianness) =>
+			buffer.ReadGeneric(sizeof(double), span => BitConverter.Int64BitsToDouble(endianness.read_i64(span)), out produced);
+		
+		public static Deserializer Read(this Deserializer buffer, out short produced)  => buffer.Read(out produced, Endianness.little);
+		public static Deserializer Read(this Deserializer buffer, out ushort produced) => buffer.Read(out produced, Endianness.little);
+		public static Deserializer Read(this Deserializer buffer, out int produced)    => buffer.Read(out produced, Endianness.little);
+		public static Deserializer Read(this Deserializer buffer, out uint produced)   => buffer.Read(out produced, Endianness.little);
+		public static Deserializer Read(this Deserializer buffer, out long produced)   => buffer.Read(out produced, Endianness.little);
+		public static Deserializer Read(this Deserializer buffer, out ulong produced)  => buffer.Read(out produced, Endianness.little);
+		public static Deserializer Read(this Deserializer buffer, out float produced)  => buffer.Read(out produced, Endianness.little);
+		public static Deserializer Read(this Deserializer buffer, out double produced) => buffer.Read(out produced, Endianness.little);
+		
+		public static Deserializer ReadBig(this Deserializer buffer, out short produced)  => buffer.Read(out produced, Endianness.big);
+		public static Deserializer ReadBig(this Deserializer buffer, out ushort produced) => buffer.Read(out produced, Endianness.big);
+		public static Deserializer ReadBig(this Deserializer buffer, out int produced)    => buffer.Read(out produced, Endianness.big);
+		public static Deserializer ReadBig(this Deserializer buffer, out uint produced)   => buffer.Read(out produced, Endianness.big);
+		public static Deserializer ReadBig(this Deserializer buffer, out long produced)   => buffer.Read(out produced, Endianness.big);
+		public static Deserializer ReadBig(this Deserializer buffer, out ulong produced)  => buffer.Read(out produced, Endianness.big);
+		public static Deserializer ReadBig(this Deserializer buffer, out float produced)  => buffer.Read(out produced, Endianness.big);
+		public static Deserializer ReadBig(this Deserializer buffer, out double produced) => buffer.Read(out produced, Endianness.big);
+		
 
 		/// <summary>Reads a string from the Deserializer.</summary>
 		/// <param name="produced">The string that was read.</param>
 		/// <param name="encoding">The encoding to use.</param>
 		/// <param name="length">The length of the string in bytes. Defaults to the remaining bytes in the buffer.</param>
-		public static Deserializer Read(this Deserializer buffer, out string produced, TextEncoding encoding, int? length = null) => buffer
-			.ReadGeneric(length, encoding.GetString, out produced);
+		public static Deserializer Read(this Deserializer buffer, out string produced, Encoding encoding, int? length = null) => buffer
+			.ReadGeneric(length ?? buffer.Remaining, encoding.GetString, out produced);
 		
 		/// <summary>Reads a UTF-8 string from the Deserializer.</summary>
 		/// <param name="produced">The string that was read.</param>
 		/// <param name="length">The length of the string in bytes.</param>
 		public static Deserializer Read(this Deserializer buffer, out string produced, int? length = null) => buffer
-			.Read(out produced, TextEncoding.UTF8, length);
+			.Read(out produced, Encoding.UTF8, length);
 		
 		/// <summary>Reads a byte array from the Deserializer.</summary>
 		/// <param name="produced">The byte array that was read.</param>
 		/// <param name="length">The length of the byte array in bytes. Defaults to the remaining bytes in the buffer.</param>
 		public static Deserializer Read(this Deserializer buffer, out byte[] produced, int? length = null) => buffer
-			.ReadGeneric(length, Deserializer.Extract, out produced);
+			.ReadGeneric(length ?? buffer.Remaining, Deserializer.Extract, out produced);
 		
 		
 		/// <summary>Reads a string from the Deserializer.</summary>
 		/// <param name="produced">The string that was read.</param>
 		/// <param name="encoding">The encoding to use.</param>
 		/// <param name="readLen">The method to read out the length of the string. (e.g. <c>Len_i32</c>)</param>
-		public static Deserializer Read(this Deserializer buffer, out string produced, TextEncoding encoding, Deserializer.LengthReader readLen) {
+		public static Deserializer Read(this Deserializer buffer, out string produced, Encoding encoding, Deserializer.LengthReader readLen) {
 			if (readLen(buffer, out var len)) {
 				produced = default;
 				return buffer;
@@ -166,7 +183,7 @@ namespace QuickBin {
 		/// <param name="produced">The string that was read.</param>
 		/// <param name="readLen">The method to read out the length of the string. (e.g. <c>Len_i32</c>)</param>
 		public static Deserializer Read(this Deserializer buffer, out string produced, Deserializer.LengthReader readLen) => buffer
-			.Read(out produced, TextEncoding.UTF8, readLen);
+			.Read(out produced, Encoding.UTF8, readLen);
 		
 		/// <summary>Reads a byte array from the Deserializer.</summary>
 		/// <param name="produced">The byte array that was read.</param>

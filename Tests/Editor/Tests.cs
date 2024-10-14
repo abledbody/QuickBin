@@ -21,7 +21,7 @@ namespace QuickBin.Tests {
 				.WriteFlag(true)
 				.WriteFlag(false, true)
 				.WriteFlag(true)
-				.Write(10)
+				.Write(10.5f)
 				.WriteFlag(true)
 				.Write(testString, Serializer.Len_i32)
 				.WriteFlag(false)
@@ -44,7 +44,7 @@ namespace QuickBin.Tests {
 				.ReadFlag(out bool j)
 				.ReadFlag(out bool k, true)
 				.ReadFlag(out bool l)
-				.Read(out int m)
+				.Read(out float m)
 				.ReadFlag(out bool n)
 				.Read(out int length)
 				.Read(out string o, length)
@@ -63,7 +63,7 @@ namespace QuickBin.Tests {
 			Assert.IsTrue(j);
 			Assert.IsFalse(k);
 			Assert.IsTrue(l);
-			Assert.AreEqual(10, m);
+			Assert.AreEqual(10.5f, m);
 			Assert.IsTrue(n);
 			Assert.AreEqual(testString, o);
 			Assert.IsFalse(p);
@@ -179,6 +179,29 @@ namespace QuickBin.Tests {
 				.ReadMany(out int[] produced, deserializer.Read, count);
 			
 			Assert.AreEqual(arr, produced);
+		}
+		
+		[Test]
+		public static void Endianness() {
+			var buffer = new Serializer()
+				.Write((ushort)0x1234)
+				.WriteBig((ushort)0x1234)
+				.Write((ushort)0x1234);
+			
+			byte[] bytes = buffer;
+			
+			Assert.AreEqual(bytes[0..2], new byte[] {0x34, 0x12});
+			Assert.AreEqual(bytes[2..4], new byte[] {0x12, 0x34});
+			Assert.AreEqual(bytes[4..6], new byte[] {0x34, 0x12});
+			
+			new Deserializer(bytes)
+				.Read(out ushort littleEndianA)
+				.ReadBig(out ushort bigEndian)
+				.Read(out ushort littleEndianB);
+			
+			Assert.AreEqual(littleEndianA, 0x1234);
+			Assert.AreEqual(bigEndian, 0x1234);
+			Assert.AreEqual(littleEndianB, 0x1234);
 		}
 	}
 	
