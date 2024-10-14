@@ -32,9 +32,10 @@ namespace QuickBin {
 		/// <param name="buffer">The byte array to deserialize from.</param>
 		/// <param name="readIndex">The index to start reading from.</param>
 		/// <param name="forbiddenIndex">The index of the first byte that is not readable by this Deserializer.</param>
+		/// <exception cref="ArgumentNullException">Thrown if <paramref name="buffer"/> is null.</exception>
 		/// <remarks>By default, Deserialize initializes to little-endian byte order.</remarks>
 		public Deserializer(byte[] buffer, int readIndex = 0, int? forbiddenIndex = null) {
-			this.buffer = buffer;
+			this.buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
 			ReadIndex = readIndex;
 			ForbiddenIndex = forbiddenIndex ?? buffer.Length;
 		}
