@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using QuickBin.ChainExtensions;
 
 namespace QuickBin {
@@ -167,6 +168,12 @@ namespace QuickBin {
 		public static Deserializer Read(this Deserializer buffer, out byte[] produced, int? length = null) => buffer
 			.ReadGeneric(length ?? buffer.Remaining, Deserializer.Extract, out produced);
 		
+		/// <summary>Creates a new Deserializer from a subsection of the current Deserializer.</summary>
+		/// <param name="produced">The Deserializer that was created.</param>
+		/// <param name="length">The length of the byte array in bytes. Defaults to the remaining bytes in the buffer.</param>
+		/// <returns>This Deserializer.</returns>
+		public static Deserializer Read(this Deserializer buffer, out Deserializer produced, int? length = null) => buffer
+			.Assign(new(buffer, buffer.ReadIndex, buffer.ReadIndex + (length ?? buffer.Remaining)), out produced);
 		
 		/// <summary>Reads a string from the Deserializer.</summary>
 		/// <param name="produced">The string that was read.</param>
@@ -192,6 +199,17 @@ namespace QuickBin {
 		public static Deserializer Read(this Deserializer buffer, out byte[] produced, Deserializer.LengthReader readLen) {
 			if (readLen(buffer, out var len)) {
 				produced = default;
+				return buffer;
+			}
+			return buffer.Read(out produced, len);
+		}
+		
+		/// <summary>Creates a new Deserializer from a subsection of the current Deserializer.</summary>
+		/// <param name="produced">The Deserializer that was created.</param>
+		/// <param name="readLen">The method to read out the length of the byte array. (e.g. <c>Len_i32</c>)</param>
+		public static Deserializer Read(this Deserializer buffer, out Deserializer produced, Deserializer.LengthReader readLen) {
+			if (readLen(buffer, out var len)) {
+				produced = new Deserializer(Array.Empty<byte>());
 				return buffer;
 			}
 			return buffer.Read(out produced, len);
