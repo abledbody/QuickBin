@@ -1,9 +1,41 @@
 using NUnit.Framework;
 
-using TextEncoding = System.Text.Encoding;
+using System.Text;
 
 namespace QuickBin.Tests {
 	public static partial class Tests {
+		[Test]
+		public static void MaxValues() {
+			var buffer = new Serializer()
+				.Write(byte.MaxValue)
+				.Write(sbyte.MaxValue)
+				.Write(ushort.MaxValue)
+				.Write(short.MaxValue)
+				.Write(uint.MaxValue)
+				.Write(int.MaxValue)
+				.Write(ulong.MaxValue)
+				.Write(long.MaxValue);
+			
+			new Deserializer(buffer)
+				.Read(out byte a)
+				.Read(out sbyte b)
+				.Read(out ushort c)
+				.Read(out short d)
+				.Read(out uint e)
+				.Read(out int f)
+				.Read(out ulong g)
+				.Read(out long h);
+			
+			Assert.AreEqual(byte.MaxValue, a);
+			Assert.AreEqual(sbyte.MaxValue, b);
+			Assert.AreEqual(ushort.MaxValue, c);
+			Assert.AreEqual(short.MaxValue, d);
+			Assert.AreEqual(uint.MaxValue, e);
+			Assert.AreEqual(int.MaxValue, f);
+			Assert.AreEqual(ulong.MaxValue, g);
+			Assert.AreEqual(long.MaxValue, h);
+		}
+		
 		[Test]
 		public static void FlagBools() {
 			var testString = "Hello, world!";
@@ -83,12 +115,12 @@ namespace QuickBin.Tests {
 				.Write(testString, Serializer.Len_u32)
 				.Write(testString, Serializer.Len_u16)
 				.Write(testString, Serializer.Len_u8)
-				.Write(testString, TextEncoding.ASCII, Serializer.Len_i32)
-				.Write(testString, TextEncoding.BigEndianUnicode, Serializer.Len_i32)
-				.Write(testString, TextEncoding.Unicode, Serializer.Len_i32)
-				.Write(testString, TextEncoding.UTF32, Serializer.Len_i32)
-				.Write(testString, TextEncoding.UTF7, Serializer.Len_i32)
-				.Write(testString, TextEncoding.UTF8, Serializer.Len_i32);
+				.Write(testString, Encoding.ASCII, Serializer.Len_i32)
+				.Write(testString, Encoding.BigEndianUnicode, Serializer.Len_i32)
+				.Write(testString, Encoding.Unicode, Serializer.Len_i32)
+				.Write(testString, Encoding.UTF32, Serializer.Len_i32)
+				.Write(testString, Encoding.UTF7, Serializer.Len_i32)
+				.Write(testString, Encoding.UTF8, Serializer.Len_i32);
 			
 			new Deserializer(buffer)
 				.Read(out string str_long, Deserializer.Len_i64)
@@ -99,12 +131,12 @@ namespace QuickBin.Tests {
 				.Read(out string str_uint, Deserializer.Len_u32)
 				.Read(out string str_ushort, Deserializer.Len_u16)
 				.Read(out string str_byte, Deserializer.Len_u8)
-				.Read(out string ascii, TextEncoding.ASCII, Deserializer.Len_i32)
-				.Read(out string bigEndianUnicode, TextEncoding.BigEndianUnicode, Deserializer.Len_i32)
-				.Read(out string unicode, TextEncoding.Unicode, Deserializer.Len_i32)
-				.Read(out string utf32, TextEncoding.UTF32, Deserializer.Len_i32)
-				.Read(out string utf7, TextEncoding.UTF7, Deserializer.Len_i32)
-				.Read(out string utf8, TextEncoding.UTF8, Deserializer.Len_i32);
+				.Read(out string ascii, Encoding.ASCII, Deserializer.Len_i32)
+				.Read(out string bigEndianUnicode, Encoding.BigEndianUnicode, Deserializer.Len_i32)
+				.Read(out string unicode, Encoding.Unicode, Deserializer.Len_i32)
+				.Read(out string utf32, Encoding.UTF32, Deserializer.Len_i32)
+				.Read(out string utf7, Encoding.UTF7, Deserializer.Len_i32)
+				.Read(out string utf8, Encoding.UTF8, Deserializer.Len_i32);
 			
 			Assert.AreEqual(testString, str_long);
 			Assert.AreEqual(testString, str_int);
