@@ -222,6 +222,11 @@ namespace QuickBin {
 			.Read(out uint minor)
 			.Read(out uint build)
 			.Read(out uint revision)
-			.Validate(() => new(major & SIGNLESS_MASK, minor & SIGNLESS_MASK, build & SIGNLESS_MASK, revision & SIGNLESS_MASK), out produced);
+			.Validate(() => new(
+				(int)(major & SIGNLESS_MASK),
+				(int)(minor & SIGNLESS_MASK),
+				(int)(build & SIGNLESS_MASK),
+				(int)(revision & SIGNLESS_MASK)
+			), out produced);
 	}
 }
