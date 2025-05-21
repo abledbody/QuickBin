@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using QuickBin.ChainExtensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -236,6 +237,20 @@ namespace QuickBin.Tests {
 			Assert.AreEqual(littleEndianA, 0x1234);
 			Assert.AreEqual(bigEndian, 0x1234);
 			Assert.AreEqual(littleEndianB, 0x1234);
+		}
+		
+		[Test]
+		public static void VersionGarbage() {
+			var buffer = new Serializer()
+				.Write(0b1001_0110_1111_0000)
+				.Write(0b1101_0110_0011_0100)
+				.Write(0b1001_0000_1011_0111)
+				.Write(0b0001_1100_1101_0001);
+			
+			new Deserializer(buffer)
+				.Read(out Version version);
+			
+			Assert.IsTrue(version.Equals(new Version(0b0001_0110_1111_0000, 0b0101_0110_0011_0100, 0b0001_0000_1011_0111, 0b0001_1100_1101_0001)));
 		}
 	}
 	

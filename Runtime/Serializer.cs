@@ -40,7 +40,7 @@ namespace QuickBin {
 			f(bytes, value);
 			
 			foreach (byte b in bytes)
-				this.buffer.Add(b);
+				buffer.Add(b);
 			
 			boolPlace = 0;
 			return this;
@@ -113,9 +113,9 @@ namespace QuickBin {
 		private static Serializer Write(this Serializer buffer, long value, Endianness endianness)   => buffer.WriteGeneric(sizeof(long),   value, endianness.write_i64);
 		private static Serializer Write(this Serializer buffer, ulong value, Endianness endianness)  => buffer.WriteGeneric(sizeof(ulong),  value, endianness.write_u64);
 		private static Serializer Write(this Serializer buffer, float value, Endianness endianness)  =>
-			buffer.WriteGeneric(sizeof(float),  value, (dest, x) => endianness.write_i32(dest, BitConverter.SingleToInt32Bits(x)));
+			buffer.WriteGeneric(sizeof(float),  (value, endianness), (dest, tup) => tup.endianness.write_i32(dest, BitConverter.SingleToInt32Bits(tup.value)));
 		private static Serializer Write(this Serializer buffer, double value, Endianness endianness) =>
-			buffer.WriteGeneric(sizeof(double), value, (dest, x) => endianness.write_i64(dest, BitConverter.DoubleToInt64Bits(x)));
+			buffer.WriteGeneric(sizeof(double), (value, endianness), (dest, tup) => tup.endianness.write_i64(dest, BitConverter.DoubleToInt64Bits(tup.value)));
 		
 		public static Serializer Write(this Serializer buffer, short value)  => buffer.Write(value, Endianness.little);
 		public static Serializer Write(this Serializer buffer, ushort value) => buffer.Write(value, Endianness.little);
