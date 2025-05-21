@@ -213,8 +213,8 @@ namespace QuickBin {
 		public static Deserializer Read(this Deserializer buffer, out TimeSpan produced) => buffer
 			.Read(out long ticks)
 			.Validate(() => new(ticks), out produced);
-		
-		const int SIGNLESS_MASK = 0b0111_1111_1111_1111
+
+		const int SIGNLESS_MASK = 0b0111_1111_1111_1111;
 		/// <note>Version does not support negative values, so the sign bit is completely ignored by this method.
 		/// Note that this is not the same thing as the absolute value.</note>
 		public static Deserializer Read(this Deserializer buffer, out Version produced) => buffer
